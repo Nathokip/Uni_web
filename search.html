@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Hostels | UniStay</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+</head>
+<body>
+    <nav>
+        <div class="logo"><a href="index.html">UniStay</a></div>
+        <div>
+            <a href="index.html">Home</a>
+        </div>
+    </nav>
+
+    <div class="search-container">
+        <div class="sidebar" id="hostel-list">
+            <div style="padding-bottom: 1rem; border-bottom: 1px solid #eee; margin-bottom: 1rem;">
+                <h3>Filters</h3>
+                <input type="number" placeholder="Max Price" id="price-filter" style="padding:5px; border-radius:4px; border:1px solid #ccc;">
+                <button onclick="applyFilters()" style="padding:5px 10px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">Apply</button>
+            </div>
+            
+            <div id="loading-msg">Loading hostels near campus...</div>
+            </div>
+
+        <div class="map-wrapper">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/search.js"></script>
+</body>
+</html>
