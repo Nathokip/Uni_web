@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete Booking</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">UniStay</div>
+    </nav>
+
+    <div class="booking-container">
+        <h2>Confirm Your Booking</h2>
+        <p style="color: #667; margin-bottom: 1.5rem;">You are booking a room at <strong id="hostel-name">...</strong></p>
+
+        <form id="booking-form">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" required placeholder="John Doe">
+            </div>
+            
+            <div class="form-group">
+                <label>Student ID</label>
+                <input type="text" required placeholder="S12/00000/22">
+            </div>
+
+            <div class="form-group">
+                <label>Room Type</label>
+                <select id="room-select">
+                    <option value="single">Single Room</option>
+                    <option value="double">Double Room</option>
+                    <option value="double">Bed sitter</option>
+
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select>
+                    <option>M-Pesa</option>
+                    <option>Credit Card</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">Pay & Secure Room</button>
+        </form>
+    </div>
+
+    <script src="assets/js/config.js"></script>
+    <script>
+        // Simple logic to fill the Hostel Name from URL
+        const params = new URLSearchParams(window.location.search);
+        const hostelId = params.get('id');
+
+        // Fetch just this hostel's details (mockup logic)
+        fetch(`${API_BASE_URL}/hostels/${hostelId}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('hostel-name').innerText = data.name;
+            })
+            .catch(err => console.log('Simulating fetch...'));
+
+        // Handle Submit
+        document.getElementById('booking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // Call Backend API to Create Booking
+            alert("Booking Request Sent! Redirecting to payment...");
+        });
+    </script>
+</body>
+</html>
