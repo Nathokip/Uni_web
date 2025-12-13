@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Hostels - UniStay</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <span class="logo-text">UniStay</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="hostels.html" class="active"><i class="fas fa-building"></i> Hostels</a></li>
+                <li><a href="landlord.html"><i class="fas fa-user-tie"></i> For Landlords</a></li>
+                <li><a href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+                <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+            </ul>
+            
+            <div class="auth-buttons">
+                <a href="login.html" class="btn btn-outline"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="register.html" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register</a>
+            </div>
+            
+            <button class="btn btn-icon mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hostels Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Available Hostels</h1>
+            <p>Find your perfect student accommodation from our verified listings</p>
+        </div>
+    </section>
+
+    <!-- Advanced Search -->
+    <section class="advanced-search">
+        <div class="container">
+            <div class="search-container">
+                <h2><i class="fas fa-sliders-h"></i> Refine Your Search</h2>
+                
+                <div class="search-filters">
+                    <div class="filter-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+                        <div class="location-filters">
+                            <input type="text" id="locationSearch" placeholder="Enter city, university or area" class="form-control">
+                            <div class="popular-locations">
+                                <span class="location-tag" data-location="Nairobi">Nairobi</span>
+                                <span class="location-tag" data-location="University of Nairobi">University of Nairobi</span>
+                                <span class="location-tag" data-location="Kenyatta University">Kenyatta University</span>
+                                <span class="location-tag" data-location="DeKUT">DeKUT</span>
+                                <span class="location-tag" data-location="Westlands">Westlands</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h3><i class="fas fa-tag"></i> Price Range (KES)</h3>
+                        <div class="price-range">
+                            <input type="range" id="priceSlider" min="0" max="20000" value="20000" class="range-slider">
+                            <div class="price-values">
+                                <span id="minPrice">0</span>
+                                <span id="maxPrice">20,000</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h3><i class="fas fa-users"></i> Roommate Preference</h3>
+                        <div class="roommate-options">
+                            <label class="radio-option">
+                                <input type="radio" name="roommate" value="any" checked>
+                                <span>Any</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="roommate" value="alone">
+                                <span><i class="fas fa-user"></i> Stay Alone</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="roommate" value="share">
+                                <span><i class="fas fa-users"></i> Share Room</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h3><i class="fas fa-star"></i> Minimum Rating</h3>
+                        <div class="rating-filter">
+                            <div class="stars">
+                                <i class="fas fa-star" data-rating="1"></i>
+                                <i class="fas fa-star" data-rating="2"></i>
+                                <i class="fas fa-star" data-rating="3"></i>
+                                <i class="fas fa-star" data-rating="4"></i>
+                                <i class="fas fa-star" data-rating="5"></i>
+                            </div>
+                            <span class="rating-text">4+ stars</span>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button id="applyFilters" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <button id="resetFilters" class="btn btn-outline">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-results-info">
+                    <p>Showing <span id="resultsCount">12</span> of <span id="totalHostels">45</span> hostels</p>
+                    <div class="sort-options">
+                        <label for="sortBy">Sort by:</label>
+                        <select id="sortBy" class="form-control">
+                            <option value="featured">Featured</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="rating">Highest Rated</option>
+                            <option value="newest">Newest First</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hostels Grid -->
+    <section class="hostels-section">
+        <div class="container">
+            <div class="hostels-grid" id="hostelsGrid">
+                <!-- Hostels will be loaded dynamically -->
+            </div>
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <div class="spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Loading hostels...</p>
+            </div>
+            
+            <!-- No Results State -->
+            <div id="noResults" class="no-results" style="display: none;">
+                <i class="fas fa-search fa-3x"></i>
+                <h3>No hostels found</h3>
+                <p>Try adjusting your search filters</p>
+                <button id="clearAllFilters" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> Clear All Filters
+                </button>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prevPage" class="btn btn-outline" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <div class="page-numbers">
+                    <span class="page-number active">1</span>
+                    <span class="page-number">2</span>
+                    <span class="page-number">3</span>
+                    <span class="page-dots">...</span>
+                    <span class="page-number">8</span>
+                </div>
+                <button id="nextPage" class="btn btn-outline">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Booking Modal -->
+    <div id="quickBookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Book This Hostel</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="bookingForm">
+                <!-- Booking form will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <div class="logo-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <span class="logo-text">UniStay</span>
+                    </div>
+                    <p class="footer-description">
+                        Your trusted platform for finding and booking student hostels near universities and colleges.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h4 class="footer-title">Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+                        <li><a href="hostels.html"><i class="fas fa-chevron-right"></i> Hostels</a></li>
+                        <li><a href="landlord.html"><i class="fas fa-chevron-right"></i> For Landlords</a></li>
+                        <li><a href="about.html"><i class="fas fa-chevron-right"></i> About</a></li>
+                        <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4 class="footer-title">Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Privacy Policy</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Terms of Service</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Cookie Policy</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4 class="footer-title">Contact Us</h4>
+                    <ul class="footer-contact">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Nairobi, Kenya</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>+254 700 123 456</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>info@unistay.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 UniStay. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--accent);"></i> for students</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="hostels.js"></script>
+</body>
+</html>
