@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Unistay</title>
+    <link rel="stylesheet" href="about.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/color/96/000000/school-building.png">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <i class="fas fa-school"></i>
+               
+                <span> Unistay<span class = "logo-hight">Hostel</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="hostels.html"fas fa-search"></i> Find Accommodation</a>
+                <a href="#"><i class="fas fa-building"></i> For Institutions</a>
+                <a href="#" class="active"><i class="fas fa-info-circle"></i> About</a>
+                <a href="index.html"><i class="fas fa-user-home"></i>Home </a>
+                <a href="register.html" class="btn-nav">Register</a>
+            </div>
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+                
+            </button>
+        </div>
+    </nav>
+
+    
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Transforming Student Accommodation Management system</h1>
+            <p class="hero-subtitle">Connecting students with safe, affordable, and convenient campus housing</p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="hostel-count">50+</span>
+                    <span class="stat-label">Student Hostels</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="student-count">5,000+</span>
+                    <span class="stat-label">Students Housed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="institution-count">120</span>
+                    <span class="stat-label" >Partner Institutions</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path
+                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z">
+                </path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Mission Section -->
+    <section class="mission-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Story & Mission</h2>
+                <p class="section-subtitle">Created by 3 students, for students - revolutionizing campus accommodation</p>
+            </div>
+
+            <div class="mission-content">
+                <div class="mission-text">
+                    <p>In the past, university students faced the common struggle of finding suitable campus
+                        accommodation. The process was fragmented, stressful, and lacked transparency. We realized
+                        <strong>thousands of students faced the same challenges every semester.</strong></p>
+
+                    <p>Existing systems were outdated and didn't address the specific needs of student housing—safety,
+                        affordability, proximity to campus, and community living.</p>
+
+                    <div class="mission-card">
+                        <i class="fas fa-bullseye mission-icon"></i>
+                        <h3>Our Mission</h3>
+                        <p>To create a comprehensive platform that simplifies student accommodation systems, ensuring
+                            every student finds safe, affordable housing that supports their academic journey.</p>
+                    </div>
+                </div>
+
+                <div class="mission-image">
+                    <div class="image-frame" >
+                        <div class="image-tag">University Campus, 2025</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Values Section -->
+    <section class="values-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Core Values</h2>
+                <p class="section-subtitle">The principles that guide our platform development</p>
+            </div>
+
+            <div class="values-grid" id="values-container">
+                <!-- Values  by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Founders Section -->
+    <section class="founders-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Meet Our Founders</h2>
+                <p class="section-subtitle">The student entrepreneurs behind Unistay</p>
+            </div>
+
+            <div class="founder-controls">
+                <button id="prev-founder" class="control-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="founder-indicator">
+                    <span id="founder-current">1</span> / <span id="founder-total">3</span>
+                </div>
+                <button id="next-founder" class="control-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="founder-carousel">
+                <div class="carousel-track" id="carousel-track">
+                    <!-- Founder cards populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="founder-grid" id="founder-grid">
+                <!-- Grid view for founders -->
+            </div>
+
+            <div class="view-toggle-container">
+                <button id="toggle-view" class="view-toggle-btn">
+                    <i class="fas fa-th"></i> Grid View
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Platform Features -->
+    <section class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Platform Features</h2>
+                <p class="section-subtitle">Designed specifically for academic accommodation needs</p>
+            </div>
+
+            <div class="features-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="students">For Students</button>
+                    <button class="tab-btn" data-tab="institutions">For Institutions</button>
+                    <button class="tab-btn" data-tab="hostels">For Hostel Managers</button>
+                </div>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="students-tab">
+                        <div class="features-grid" id="student-features">
+                            <!-- Student features populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="institutions-tab">
+                        <div class="features-grid" id="institution-features">
+                            <!-- Institution features populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="hostels-tab">
+                        <div class="features-grid" id="hostel-features">
+                            <!-- Hostel manager features populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safety & Security -->
+    <section class="safety-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Safety & Security First</h2>
+                <p class="section-subtitle">Our commitment to student welfare</p>
+            </div>
+
+            <div class="safety-grid">
+                <div class="safety-card">
+                    <div class="safety-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Verified Hostels</h3>
+                    <p>All hostels undergo thorough verification including safety inspections, fire compliance, and
+                        staff background checks.</p>
+                </div>
+
+                <div class="safety-card">
+                    <div class="safety-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <h3>Student Verification</h3>
+                    <p>Student identity verification ensures only legitimate students access the platform and
+                        accommodation facilities.</p>
+                </div>
+
+                <div class="safety-card">
+                    <div class="safety-icon">
+                        <i class="fas fa-camera-security"></i>
+                    </div>
+                    <h3>24/7 Support</h3>
+                    <p>Round-the-clock support team available for emergencies, complaints, and accommodation-related
+                        issues.</p>
+                </div>
+
+                <div class="safety-card">
+                    <div class="safety-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <h3>Legal Compliance</h3>
+                    <p>All accommodation agreements comply with educational institution policies and local housing
+                        regulations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h2>Ready to Simplify Student Accommodation?</h2>
+                    <p>Join thousands of students, institutions, and hostel managers who trust Unistay for their
+                        accommodation needs.</p>
+                    <div class="cta-buttons">
+                        <a href="hostels.html" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Find Accommodation
+                        </a>
+                        <a href="landlord.html" class="btn btn-secondary">
+                            <i class="fas fa-building"></i> List Your Hostel
+                        </a>
+                    </div>
+                </div>
+                <div class="cta-image">
+                    <div class="community-tag">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>5,000+ Students Served</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <i class="fas fa-school"></i>
+                        <span>Campus<span class="logo-highlight">Hostel</span></span>
+                    </a>
+                    <p class="footer-tagline">Your trusted partner for student accommodation management.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-links">
+                    <div class="link-column">
+                        <h4>For Students</h4>
+                        <a href="hostels.html">Find Hostels</a>
+                        <a href="#">Roommate Finder</a>
+                        <a href="#">Safety Guidelines</a>
+                        <a href="#">Student Resources</a>
+                    </div>
+
+                    <div class="link-column">
+                        <h4>For Institutions</h4>
+                        <a href="#">Campus Partnership</a>
+                        <a href="#">Administration Portal</a>
+                        <a href="#">Accommodation Reports</a>
+                        <a href="#">Integration Services</a>
+                    </div>
+
+                    <div class="link-column">
+                        <h4>Company</h4>
+                        <a href="#" class="active">About Us</a>
+                        <a href="contact.html">Contact</a>
+                        <a href="contact.html">Support</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> CampusHostel. All rights reserved.</p>
+                <div class="footer-legal">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Student Safety Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="about.js"></script>
+</body>
+
+</html>
