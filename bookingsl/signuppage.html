@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Explorer | Create Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+        }
+
+        .register-container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+       
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url("dekutpitch.jpg") no-repeat;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            color: #ff4757;
+        }
+
+        .travel-inspiration {
+            margin-top: 60px;
+        }
+
+        .travel-inspiration h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .travel-inspiration p {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .destination {
+            height: 100px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .destination img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .destination:hover img {
+            transform: scale(1.05);
+        }
+
+        .destination-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 10px;
+            color: white;
+        }
+
+        .destination-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Right Panel - Registration Form */
+        .right-panel {
+            flex: 1;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .create-account {
+            font-size: 32px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 10px;
+        }
+
+        .create-account::after {
+            content: '?';
+            color: #ff4757;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .required-star {
+            color: #ff4757;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5ee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(74, 108, 247, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #777;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .example-text {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+            margin-left: 5px;
+        }
+
+        .password-requirements {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+            gap: 5px;
+        }
+
+        .requirement i {
+            font-size: 10px;
+            color: #ddd;
+        }
+
+        .requirement.valid i {
+            color: #4CAF50;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 16px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0 30px 0;
+        }
+
+        .register-btn:hover {
+            background: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .divider {
+            text-align: center;
+            position: relative;
+            margin: 30px 0;
+            color: #888;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e1e5ee;
+        }
+
+        .divider i {
+            color: #ff4757;
+            font-size: 16px;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e1e5ee;
+            border-radius: 10px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        .social-btn:hover {
+            border-color: #4a6cf7;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .google-btn i {
+            color: #DB4437;
+        }
+
+        .apple-btn i {
+            color: #000;
+        }
+
+        .login-link {
+            text-align: center;
+            color: #666;
+            font-size: 15px;
+        }
+
+        .login-link a {
+            color: #4a6cf7;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .login-link a:hover {
+            color: #3a5ce5;
+            text-decoration: underline;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 5px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0;
+            background: #ddd;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        /* Terms & Conditions */
+        .terms {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .terms input[type="checkbox"] {
+            margin-top: 3px;
+            accent-color: #4a6cf7;
+        }
+
+        .terms a {
+            color: #4a6cf7;
+            text-decoration: none;
+        }
+
+        .terms a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .register-container {
+                flex-direction: column;
+                max-width: 500px;
+            }
+
+            .left-panel {
+                padding: 30px;
+                text-align: center;
+            }
+
+            .travel-inspiration h1 {
+                font-size: 28px;
+            }
+
+            .destinations-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .right-panel {
+                padding: 30px 25px;
+            }
+
+            .create-account {
+                font-size: 28px;
+            }
+
+            .social-login {
+                flex-direction: column;
+            }
+
+            .destinations-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        /* Success Message */
+        .success-message {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .success-message i {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        
+        <div class="left-panel">
+            <div class="logo">
+                
+                <span>UNISTAY</span>
+            </div>
+
+            <div class="travel-inspiration">
+                <h1>Discover hidden hostels in Kimathi</h1>
+                <p>It is now time to avoid dangerous and tiring house hunt by using our platform. This provides a platform to view all the available spaces in one place.</p>
+                
+                <div class="destinations-grid">
+                    <div class="destination">
+                        <img src="nyeriview.jpg" alt="NyeriView">
+                        <div class="destination-overlay">
+                            <div class="destination-name">NyeriView</div>
+                        </div>
+                        
+                    </div>
+                     <div class="destination">
+                        <img src="https://images.unsplash.com/photo-1536152470836-b943b246224c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=873&q=80" alt="Gate A">
+                        <div class="destination-overlay">
+                            <div class="destination-name">King'ong'o & Town</div>
+                        </div>
+                    </div>
+                    <div class="destination">
+                        <img src="https://images.unsplash.com/photo-1536152470836-b943b246224c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=873&q=80" alt="Gate A">
+                        <div class="destination-overlay">
+                            <div class="destination-name">Gate A</div>
+                        </div>
+                    </div>
+                      <div class="destination">
+                        <img src="nyaribo.jpg" alt="Nyaribo">
+                        <div class="destination-overlay">
+                            <div class="destination-name">Nyaribo</div>
+                        </div>
+                    </div>
+                    <div class="destination">
+                        <img src="boma.jpeg" alt="Boma">
+                        <div class="destination-overlay">
+                            <div class="destination-name">Boma</div>
+                        </div>
+                        
+                    </div>
+                    <div class="destination">
+                        <img src="https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80" alt="Kaha">
+                        <div class="destination-overlay">
+                            <div class="destination-name">Kahawa</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Registration Form -->
+        <div class="right-panel">
+            <h1 class="create-account">Create Your Account</h1>
+            <p class="subtitle">Create your account to explore existing travel destinations and adventures.</p>
+
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i>
+                <span>Account created successfully! Redirecting...</span>
+            </div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="fullName">Full Name<span class="required-star">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="fullName" placeholder="Nathan Bravo" required>
+                    </div>
+                    <div class="example-text">Nathan Bravo</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email address<span class="required-star">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" placeholder="example@gmail.com" required>
+                    </div>
+                    <div class="example-text">example@gmail.com</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password<span class="required-star">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" value="@sm23bnn#" required>
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="example-text">@sm23bnn#</div>
+                    
+                    <div class="password-strength">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    
+                    <div class="password-requirements">
+                        <div class="requirement" id="reqLength">
+                            <i class="fas fa-circle"></i>
+                            <span>At least 8 characters</span>
+                        </div>
+                        <div class="requirement" id="reqUpper">
+                            <i class="fas fa-circle"></i>
+                            <span>Contains uppercase letter</span>
+                        </div>
+                        <div class="requirement" id="reqNumber">
+                            <i class="fas fa-circle"></i>
+                            <span>Contains number</span>
+                        </div>
+                        <div class="requirement" id="reqSpecial">
+                            <i class="fas fa-circle"></i>
+                            <span>Contains special character</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">
+                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="register-btn">Register</button>
+            </form>
+
+            <div class="divider">
+               
+                <span>««continue with»»</span>
+               
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn google-btn" id="googleRegister">
+                    <i class="fab fa-google"></i>
+                    Google
+                </button>
+                <button class="social-btn apple-btn" id="appleRegister">
+                    <i class="fab fa-apple"></i>
+                    Apple
+                </button>
+            </div>
+
+            <p class="login-link">
+                Already have an account? <a href="#" id="loginLink">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const registerForm = document.getElementById('registerForm');
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const togglePasswordBtn = document.getElementById('togglePassword');
+            const strengthFill = document.getElementById('strengthFill');
+            const googleRegisterBtn = document.getElementById('googleRegister');
+            const appleRegisterBtn = document.getElementById('appleRegister');
+            const loginLink = document.getElementById('loginLink');
+            const successMessage = document.getElementById('successMessage');
+            const termsCheckbox = document.getElementById('terms');
+            
+            // Password requirement elements
+            const reqLength = document.getElementById('reqLength');
+            const reqUpper = document.getElementById('reqUpper');
+            const reqNumber = document.getElementById('reqNumber');
+            const reqSpecial = document.getElementById('reqSpecial');
+
+            // Toggle password visibility
+            togglePasswordBtn.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+
+            // Password strength and requirement checker
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                updatePasswordRequirements(password);
+                updatePasswordStrength(password);
+            });
+
+            function updatePasswordRequirements(password) {
+                // Check length
+                if (password.length >= 8) {
+                    reqLength.classList.add('valid');
+                    reqLength.querySelector('i').className = 'fas fa-check-circle';
+                } else {
+                    reqLength.classList.remove('valid');
+                    reqLength.querySelector('i').className = 'fas fa-circle';
+                }
+
+                // Check uppercase
+                if (/[A-Z]/.test(password)) {
+                    reqUpper.classList.add('valid');
+                    reqUpper.querySelector('i').className = 'fas fa-check-circle';
+                } else {
+                    reqUpper.classList.remove('valid');
+                    reqUpper.querySelector('i').className = 'fas fa-circle';
+                }
+
+                // Check number
+                if (/[0-9]/.test(password)) {
+                    reqNumber.classList.add('valid');
+                    reqNumber.querySelector('i').className = 'fas fa-check-circle';
+               
