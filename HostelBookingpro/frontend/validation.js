@@ -251,46 +251,71 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Landlord form specific validation
+// Inside your existing initLandlordForm() function...
+
 function initLandlordForm() {
-    const imageUpload = document.getElementById('hostelImages');
-    const imagePreview = document.getElementById('imagePreview');
+    // ... existing image preview code ...
+
+    // Drag and drop for upload areas
+    const uploadAreas = document.querySelectorAll('.upload-area');
     
-    if (imageUpload) {
-        imageUpload.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files).slice(0, 4); // Limit to 4 images
-            imagePreview.innerHTML = '';
-            
-            files.forEach((file, index) => {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    const previewItem = document.createElement('div');
-                    previewItem.className = 'preview-item';
-                    previewItem.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview ${index + 1}">
-                        <div class="remove-image" data-index="${index}">
-                            <i class="fas fa-times"></i>
-                        </div>
-                    `;
-                    
-                    imagePreview.appendChild(previewItem);
-                    
-                    // Add remove functionality
-                    previewItem.querySelector('.remove-image').addEventListener('click', function() {
-                        previewItem.remove();
-                        
-                        // Remove file from input
-                        const dt = new DataTransfer();
-                        const remainingFiles = Array.from(imageUpload.files).filter((_, i) => i != this.dataset.index);
-                        remainingFiles.forEach(file => dt.items.add(file));
-                        imageUpload.files = dt.files;
-                    });
-                };
-                
-                reader.readAsDataURL(file);
-            });
+    uploadAreas.forEach(area => {
+        const input = area.querySelector('input[type="file"]');
+        const textElement = area.querySelector('p'); // Get the text <p> tag
+
+        // --- 1. MISSING PART: MAKE CLICKING WORK ---
+        // If user clicks the div, trigger the hidden input
+        area.addEventListener('click', (e) => {
+            // Prevent recursive clicking if user somehow hits the input directly
+            if (e.target !== input) {
+                input.click();
+            }
         });
-    }
+
+        // --- 2. MISSING PART: UPDATE TEXT ON FILE SELECT ---
+        // When a file is chosen via click OR drag, update the text
+        if (input) {
+            input.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    const count = this.files.length;
+                    const fileName = this.files[0].name;
+                    
+                    // Update the text so user sees what they picked
+                    textElement.textContent = count > 1 ? `${count} files selected` : fileName;
+                    
+                    // Add blue border styling
+                    area.style.borderColor = "#2563eb";
+                    area.style.backgroundColor = "#eff6ff";
+                }
+            });
+        }
+        // ------------------------------------------
+
+        // ... your existing dragover code ...
+        area.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        // ... your existing dragleave code ...
+        area.addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+        
+        // ... your existing drop code ...
+        area.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            
+            if (input) {
+                input.files = files;
+                input.dispatchEvent(new Event('change')); // This triggers the text update above
+            }
+        });
+    });
+}
     
     // Drag and drop for upload areas
     const uploadAreas = document.querySelectorAll('.upload-area');
@@ -318,7 +343,6 @@ function initLandlordForm() {
             }
         });
     });
-}
 
 // Password strength indicator
 function initPasswordStrength() {
