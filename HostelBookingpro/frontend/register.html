@@ -7,6 +7,37 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FIX: Added styles to handle visibility and z-index overlaps -->
+    <style>
+        /* Ensure modals are always on top of the form */
+        .modal {
+            z-index: 1000; 
+            position: fixed;
+        }
+        
+        /* Ensure the form card doesn't overlap the modal */
+        .auth-card {
+            position: relative;
+            z-index: 1; 
+        }
+
+        /* Standard utility to hide elements visually but keep them accessible if needed, 
+           though for tabs we usually use display: none */
+        .registration-form {
+            display: none;
+        }
+        
+        .registration-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
     <section class="auth-section">
@@ -31,7 +62,8 @@
                             <span>Student</span>
                             <p>Looking for accommodation</p>
                         </button>
-                        <button type="button" class="type-option" data-type="landlord" onclick="window.location.href='landlord.html'">
+                        <!-- FIX: Removed onclick redirect so the tab switching works -->
+                        <button type="button" class="type-option" data-type="landlord">
                             <i class="fas fa-user-tie"></i>
                             <span>Landlord</span>
                             <p>Want to list your hostel</p>
@@ -41,7 +73,7 @@
                 
                 <!-- Registration Form -->
                 <form class="auth-form" id="registerForm">
-                    <!-- Student Registration Form -->
+                    <!-- Student Registration Form (Active by default) -->
                     <div class="registration-form active" data-type="student">
                         <div class="form-group">
                             <label for="studentEmail"><i class="fas fa-envelope"></i> Email Address *</label>
@@ -135,17 +167,18 @@
                     </div>
                     
                     <!-- Landlord Registration Form -->
+                    <!-- FIX: Added 'disabled' to all inputs here. This prevents the "An invalid form control is not focusable" error -->
                     <div class="registration-form" data-type="landlord">
                         <div class="form-group">
                             <label for="landlordEmail"><i class="fas fa-envelope"></i> Email Address *</label>
-                            <input type="email" id="landlordEmail" class="form-control" placeholder="example@gmail.com" required>
+                            <input type="email" id="landlordEmail" class="form-control" placeholder="example@gmail.com" required disabled>
                             <div class="error-message"></div>
                         </div>
                         
                         <div class="form-group">
                             <label for="landlordPassword"><i class="fas fa-lock"></i> Password *</label>
                             <div class="password-input">
-                                <input type="password" id="landlordPassword" class="form-control" placeholder="Create a strong password" required>
+                                <input type="password" id="landlordPassword" class="form-control" placeholder="Create a strong password" required disabled>
                                 <button type="button" class="toggle-password">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -172,7 +205,7 @@
                         <div class="form-group">
                             <label for="confirmLandlordPassword"><i class="fas fa-lock"></i> Confirm Password *</label>
                             <div class="password-input">
-                                <input type="password" id="confirmLandlordPassword" class="form-control" placeholder="Confirm your password" required>
+                                <input type="password" id="confirmLandlordPassword" class="form-control" placeholder="Confirm your password" required disabled>
                                 <button type="button" class="toggle-password">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -187,39 +220,39 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="landlordFirstName"><i class="fas fa-user"></i> First Name *</label>
-                                <input type="text" id="landlordFirstName" class="form-control" required>
+                                <input type="text" id="landlordFirstName" class="form-control" required disabled>
                                 <div class="error-message"></div>
                             </div>
                             
                             <div class="form-group">
                                 <label for="landlordLastName"><i class="fas fa-user"></i> Last Name *</label>
-                                <input type="text" id="landlordLastName" class="form-control" required>
+                                <input type="text" id="landlordLastName" class="form-control" required disabled>
                                 <div class="error-message"></div>
                             </div>
                         </div>
                         
                         <div class="form-group">
                             <label for="landlordPhone"><i class="fas fa-phone"></i> Phone Number *</label>
-                            <input type="tel" id="landlordPhone" class="form-control" placeholder="+254 700 123 456" required>
+                            <input type="tel" id="landlordPhone" class="form-control" placeholder="+254 700 123 456" required disabled>
                             <div class="error-message"></div>
                         </div>
                         
                         <div class="form-group">
                             <label for="idNumber"><i class="fas fa-id-card"></i> National ID Number *</label>
-                            <input type="text" id="idNumber" class="form-control" required>
+                            <input type="text" id="idNumber" class="form-control" required disabled>
                             <div class="error-message"></div>
                         </div>
                         
                         <div class="terms-agreement">
                             <label class="checkbox">
-                                <input type="checkbox" id="landlordTermsAgreement" required>
+                                <input type="checkbox" id="landlordTermsAgreement" required disabled>
                                 <span>
                                     I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="privacy-link">Privacy Policy</a>
                                 </span>
                             </label>
                             
                             <label class="checkbox">
-                                <input type="checkbox" id="landlordMarketingConsent">
+                                <input type="checkbox" id="landlordMarketingConsent" disabled>
                                 <span>
                                     I'd like to receive updates about my listings and platform news
                                 </span>
@@ -310,5 +343,40 @@
     </div>
 
     <script src="register.js"></script>
+    
+    <!-- FIX: Logic to handle tab switching and validation state -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeOptions = document.querySelectorAll('.type-option');
+            const forms = document.querySelectorAll('.registration-form');
+            
+            typeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // 1. Visual Toggle
+                    typeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const type = this.getAttribute('data-type');
+                    
+                    // 2. Form Toggle & Validation Fix
+                    forms.forEach(form => {
+                        const inputs = form.querySelectorAll('input, select, textarea');
+                        
+                        if (form.getAttribute('data-type') === type) {
+                            // Show this form
+                            form.classList.add('active');
+                            // Enable inputs so they CAN be validated
+                            inputs.forEach(input => input.disabled = false);
+                        } else {
+                            // Hide this form
+                            form.classList.remove('active');
+                            // Disable inputs so they are IGNORED by validation
+                            inputs.forEach(input => input.disabled = true);
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>

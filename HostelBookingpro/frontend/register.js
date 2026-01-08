@@ -286,78 +286,105 @@ function clearFieldError(field) {
 /**
  * Handle form submission
  */
+/**
+ * Handle form submission (Robust Version)
+ */
 async function handleRegistration(event) {
     event.preventDefault();
-    
     console.log('Registration form submitted');
     
     // Clear previous errors
-    clearAllErrors();
-    
-    // Determine which form is active (only student form is functional now)
+    const generalError = document.getElementById('generalError');
+    if (generalError) generalError.style.display = 'none';
+
+    // Determine active type
     const activeType = document.querySelector('.type-option.active').getAttribute('data-type');
     
-    // If landlord is active, show message
     if (activeType === 'landlord') {
         alert('Please use the Landlord button to go to the landlord registration page.');
         return;
     }
     
-    // Get student form data
-    const formData = {
-        userType: 'student',
-        email: document.getElementById('studentEmail').value.trim(),
-        password: document.getElementById('studentPassword').value,
-        confirmPassword: document.getElementById('confirmStudentPassword').value,
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        university: document.getElementById('university').value.trim(),
-        termsAgreed: document.getElementById('termsAgreement').checked,
-        marketingConsent: document.getElementById('marketingConsent').checked
-    };
-    
-    // Validate form data
-    const isValid = validateForm(formData);
-    
-    if (!isValid) {
-        return;
-    }
-    
-    // Show loading state
-    setLoadingState(true);
+    // Helper to get value
+    const getVal = (id) => document.getElementById(id)?.value.trim();
+
+    // Prepare Data
+    const formData = new FormData();
+    formData.append('role', activeType);
+    formData.append('email', getVal('studentEmail'));
+    formData.append('password', getVal('studentPassword'));
+    formData.append('first_name', getVal('firstName'));
+    formData.append('last_name', getVal('lastName'));
+    formData.append('phone', getVal('phone'));
+    formData.append('university', getVal('university'));
+
+    // Loading State
+    const submitBtn = document.querySelector('#registerForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+    submitBtn.disabled = true;
     
     try {
-        // Prepare data for API
-        const registrationData = {
-            ...formData,
-            registrationDate: new Date().toISOString()
-        };
-        
-        // Remove confirmPassword as it's not needed for backend
-        delete registrationData.confirmPassword;
-        
-        // In a real app, you would send this to your backend API
-        console.log('Registration data:', registrationData);
-        
-        // Simulate API call with delay
-        await simulateAPICall(registrationData);
-        
-        // Show success or verification
-        if (shouldVerifyEmail()) {
-            showVerificationModal(registrationData.email);
+        // --- 1. The Request ---
+        // Use a path relative to this frontend page so requests reach the backend folder
+        const response = await fetch('/Uni_web/HostelBookingpro/backend/register.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        // --- 2. The Smart Check (Your new logic) ---
+        const contentType = response.headers.get("content-type");
+
+        if (response.ok) {
+            // Success Status (200-299)
+            if (contentType && contentType.includes("application/json")) {
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showVerificationModal(data.email);
+                } else {
+                    showGeneralError(data.message || 'Registration failed');
+                }
+            } else {
+                // PHP returned 200 OK but sent HTML instead of JSON? (Weird server config)
+                const text = await response.text();
+                console.warn('Received non-JSON response:', text);
+                showGeneralError('Server Error: Response was not JSON format.');
+            }
         } else {
-            showSuccessModal(registrationData.userType);
+            // Error Status (400, 404, 500)
+            if (contentType && contentType.includes("application/json")) {
+                const errorData = await response.json();
+                showGeneralError(errorData.message || 'Registration failed due to server error.');
+            } else {
+                // It's likely a standard Apache 404 or PHP Fatal Error HTML page
+                const errorText = await response.text();
+                console.error('Server HTML Error:', errorText);
+                showGeneralError(`Server Error (${response.status}): Check console for details.`);
+            }
         }
-        
-    } catch (error) {
-        console.error('Registration error:', error);
-        showGeneralError('Registration failed. Please try again.');
+
+    } catch (err) {
+        console.error('Network Error:', err);
+        showGeneralError('Connection failed. Is XAMPP running?');
     } finally {
-        setLoadingState(false);
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
 }
 
+function showGeneralError(message) {
+    let errorDisplay = document.getElementById('generalError');
+    if (!errorDisplay) {
+        // Create if missing
+        errorDisplay = document.createElement('div');
+        errorDisplay.id = 'generalError';
+        errorDisplay.style.cssText = "background-color: #ffebee; color: #c62828; padding: 12px; margin-top: 15px; border-radius: 6px; display: none;";
+        document.querySelector('.auth-card').appendChild(errorDisplay);
+    }
+    errorDisplay.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+    errorDisplay.style.display = 'block';
+}
 /**
  * Validate form data
  */
