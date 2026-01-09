@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - UniStay</title>
+    <link rel="stylesheet" href="style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 50px auto; padding: 20px; }
+        .request-card { background: white; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .req-info { flex: 2; min-width: 300px; }
+        .req-docs { flex: 1; min-width: 250px; background: #f8f9fa; padding: 15px; border-radius: 5px; }
+        .req-actions { flex: 100%; display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
+        .doc-link { display: inline-block; padding: 5px 10px; background: #e9ecef; color: #333; border-radius: 4px; text-decoration: none; margin: 5px 5px 0 0; font-size: 0.85rem; }
+        .doc-link:hover { background: #dee2e6; }
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <nav class="navbar"><div class="container"><h1>UniStay Admin</h1></div></nav>
+
+    <div class="admin-container">
+        <h2><i class="fas fa-user-shield"></i> Pending Landlord Requests</h2>
+        <div id="loading" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+        <div id="requestsList"></div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

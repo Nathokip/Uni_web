@@ -224,9 +224,16 @@ class FormValidator {
                 catch (e) { throw new Error("Server Error: " + text); }
 
                 if (data.status === 'success') {
-                   // this.showSuccess(); // Shows the green checkmark
+                    // 1. Show Visual Success (Green checkmark)
+                    this.showSuccess(); 
                     
-                    // Redirect after 1 second
+                    // 2. SAVE USER SESSION (Crucial Step!)
+                    // This stores the user data in the browser so hostels.js knows you are logged in.
+                    if (data.user) {
+                        localStorage.setItem('unistay_user', JSON.stringify(data.user));
+                    }
+
+                    // 3. Redirect after 1 second
                     setTimeout(() => {
                         if (data.role === 'landlord') {
                             window.location.href = 'landlord-dashboard.html';

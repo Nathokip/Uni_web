@@ -240,7 +240,7 @@ function initImageSliders() {
         let currentSlide = 0;
         
         // Auto slide every 5 seconds
-        const slideInterval = setInterval(() => {
+        let slideInterval = setInterval(() => {
             currentSlide = (currentSlide + 1) % dots.length;
             updateSlider(slider, dots, currentSlide);
         }, 5000);
@@ -559,40 +559,51 @@ function viewHostelDetails(hostelId) {
 
 function showBookingModal(hostel) {
     const modal = document.getElementById('quickBookingModal');
-    const bookingForm = document.getElementById('bookingForm');
+    // NOTE: Your HTML has id="bookingForm" for the container, but your JS was targeting it.
+    // We update this to be safe.
+    const bookingFormContainer = document.getElementById('bookingForm');
     
-    if (!modal || !bookingForm) return;
+    if (!modal || !bookingFormContainer) return;
     
-    // Create booking form
-    bookingForm.innerHTML = `
+    // 1. Render the Booking Form HTML
+    bookingFormContainer.innerHTML = `
         <div class="booking-summary">
-            <h4>${hostel.name}</h4>
-            <p><i class="fas fa-map-marker-alt"></i> ${hostel.location}</p>
-            <div class="price-breakdown">
-                <div class="price-item">
+            <h4 style="color: #2563eb; margin-bottom: 5px;">${hostel.name}</h4>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                <i class="fas fa-map-marker-alt"></i> ${hostel.location}
+            </p>
+            <div class="price-breakdown" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div class="price-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                     <span>Monthly Rent:</span>
                     <span>KES ${hostel.price.toLocaleString()}</span>
                 </div>
-                <div class="price-item total">
-                    <span>First Month Total:</span>
-                    <span>KES ${hostel.price.toLocaleString()}</span>
+                <div class="price-item total" style="display: flex; justify-content: space-between; font-weight: bold; color: #1e293b; border-top: 1px solid #e2e8f0; padding-top: 5px; margin-top: 5px;">
+                    <span>Total First Payment:</span>
+                    <span id="displayTotal">KES ${hostel.price.toLocaleString()}</span>
                 </div>
             </div>
         </div>
         
+        <div id="bookingMsg" style="display:none; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: center;"></div>
+
         <form id="quickBookingForm">
+            <input type="hidden" name="hostel_id" value="${hostel.id}">
+            <input type="hidden" name="hostel_name" value="${hostel.name}">
+            <input type="hidden" name="price" value="${hostel.price}">
+
             <div class="form-group">
                 <label for="moveInDate">Move-in Date</label>
-                <input type="date" id="moveInDate" class="form-control" required>
+                <input type="date" id="moveInDate" name="move_in_date" class="form-control" required>
             </div>
             
             <div class="form-group">
-                <label for="duration">Duration</label>
-                <select id="duration" class="form-control">
+                <label for="duration">Duration (Months)</label>
+                <select id="duration" name="duration" class="form-control">
                     <option value="1">1 Month</option>
                     <option value="3">3 Months</option>
+                    <option value="4">1 Semester (4 Months)</option>
                     <option value="6">6 Months</option>
-                    <option value="12">12 Months</option>
+                    <option value="12">1 Year</option>
                 </select>
             </div>
             
@@ -602,26 +613,87 @@ function showBookingModal(hostel) {
         </form>
     `;
     
+    // 2. Dynamic Price Calculation
+    const durationSelect = document.getElementById('duration');
+    const totalDisplay = document.getElementById('displayTotal');
+    
+    durationSelect.addEventListener('change', function() {
+        const months = parseInt(this.value);
+        const total = months * hostel.price;
+        totalDisplay.textContent = `KES ${total.toLocaleString()}`;
+    });
+
     // Show modal
     modal.style.display = 'block';
     
-    // Close modal when clicking X
-    modal.querySelector('.close-modal').addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+    // Close Logic
+    const closeBtn = modal.querySelector('.close-modal');
+    // Ensure close button exists before adding listener to prevent errors
+    if (closeBtn) {
+        closeBtn.onclick = () => modal.style.display = 'none';
+    }
+    window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     
-    // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    // 3. Handle Form Submission (THIS IS THE PART YOU WERE MISSING)
+    const form = document.getElementById('quickBookingForm');
     
-    // Handle booking form submission
-    document.getElementById('quickBookingForm')?.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        // Process booking
-        alert(`Booking confirmed for ${hostel.name}! Redirecting to payment...`);
-        modal.style.display = 'none';
+        
+        const btn = this.querySelector('button[type="submit"]');
+        const msgBox = document.getElementById('bookingMsg');
+        const formData = new FormData(this);
+
+        // Visual Feedback
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+        msgBox.style.display = 'none';
+
+        try {
+            // IMPORTANT: Verify this path matches your folder structure exactly!
+            const response = await fetch('/Uni_web/HostelBookingpro/backend/hostel.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            // Check if PHP returned HTML error instead of JSON (Common issue)
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                console.error("Server returned invalid JSON:", text);
+                throw new Error("Server Error. Check console for details.");
+            }
+
+            if (data.status === 'success') {
+                msgBox.textContent = "Booking Successful! Redirecting...";
+                msgBox.style.color = '#155724';
+                msgBox.style.background = '#d4edda';
+                msgBox.style.display = 'block';
+                
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    // Optional: Redirect to a payment or dashboard page
+                    // window.location.href = 'student-dashboard.html'; 
+                }, 2000);
+            } else {
+                msgBox.textContent = data.message;
+                msgBox.style.color = '#721c24';
+                msgBox.style.background = '#f8d7da';
+                msgBox.style.display = 'block';
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        } catch (err) {
+            console.error(err);
+            msgBox.textContent = "Connection failed. Please try again.";
+            msgBox.style.color = '#721c24';
+            msgBox.style.background = '#f8d7da';
+            msgBox.style.display = 'block';
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     });
 }
