@@ -199,21 +199,64 @@ class FormValidator {
         return field.placeholder || field.name || 'This field';
     }
     
-    submitForm() {
-        // In a real app, this would be an AJAX request
-        console.log('Form submitted successfully!', this.getFormData());
-        
-        // Simulate API call
+    async submitForm() {
         const submitBtn = this.form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
-        
+        const formData = new FormData(this.form);
+
+        // 1. Show Loading Spinner
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         submitBtn.disabled = true;
-        
-        setTimeout(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }, 2000);
+
+        try {
+            // 2. CHECK: Is this the Login Form?
+            if (this.form.id === 'loginForm') {
+                
+                const response = await fetch('/Uni_web/HostelBookingpro/backend/login.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Handle the text/json manually to prevent crashes
+                const text = await response.text();
+                let data;
+                try { data = JSON.parse(text); } 
+                catch (e) { throw new Error("Server Error: " + text); }
+
+                if (data.status === 'success') {
+                   // this.showSuccess(); // Shows the green checkmark
+                    
+                    // Redirect after 1 second
+                    setTimeout(() => {
+                        if (data.role === 'landlord') {
+                            window.location.href = 'landlord-dashboard.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1000);
+                } else {
+                    this.showFormError(data.message || 'Login failed');
+                }
+            } 
+            
+            // 3. CHECK: Is this the Registration Form?
+            else if (this.form.id === 'registerForm') {
+                // If you want validation.js to handle registration too, 
+                // you can paste the fetch logic from register.js here.
+                // Otherwise, we just return and let register.js handle it.
+                console.log('Validation passed. Handing over to register.js...');
+            }
+
+        } catch (error) {
+            console.error(error);
+            this.showFormError('Connection failed. Please check your internet or server.');
+        } finally {
+            // Restore button if we didn't redirect
+            if (this.form.id !== 'loginForm' || !window.location.href.includes('dashboard')) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
     }
     
     getFormData() {
@@ -317,73 +360,4 @@ function initLandlordForm() {
     });
 }
     
-    // Drag and drop for upload areas
-    const uploadAreas = document.querySelectorAll('.upload-area');
     
-    uploadAreas.forEach(area => {
-        area.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('dragover');
-        });
-        
-        area.addEventListener('dragleave', function() {
-            this.classList.remove('dragover');
-        });
-        
-        area.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            const input = this.querySelector('input[type="file"]');
-            
-            if (input) {
-                input.files = files;
-                input.dispatchEvent(new Event('change'));
-            }
-        });
-    });
-
-// Password strength indicator
-function initPasswordStrength() {
-    const passwordInput = document.getElementById('password');
-    
-    if (passwordInput) {
-        const strengthIndicator = document.createElement('div');
-        strengthIndicator.className = 'password-strength';
-        
-        passwordInput.parentNode.appendChild(strengthIndicator);
-        
-        passwordInput.addEventListener('input', function() {
-            const password = this.value;
-            const strength = calculatePasswordStrength(password);
-            
-            strengthIndicator.innerHTML = `
-                <div class="strength-bar">
-                    <div class="strength-fill" style="width: ${strength.percentage}%; background: ${strength.color};"></div>
-                </div>
-                <span class="strength-text" style="color: ${strength.color};">${strength.text}</span>
-            `;
-        });
-    }
-}
-
-function calculatePasswordStrength(password) {
-    let score = 0;
-    
-    if (password.length >= 8) score += 25;
-    if (/[a-z]/.test(password)) score += 25;
-    if (/[A-Z]/.test(password)) score += 25;
-    if (/[0-9]/.test(password)) score += 15;
-    if (/[^A-Za-z0-9]/.test(password)) score += 10;
-    
-    if (score >= 80) {
-        return { percentage: 100, color: '#10b981', text: 'Strong' };
-    } else if (score >= 60) {
-        return { percentage: 75, color: '#f59e0b', text: 'Good' };
-    } else if (score >= 40) {
-        return { percentage: 50, color: '#f59e0b', text: 'Fair' };
-    } else {
-        return { percentage: 25, color: '#ef476f', text: 'Weak' };
-    }
-}
