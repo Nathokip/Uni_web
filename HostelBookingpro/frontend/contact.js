@@ -7,44 +7,66 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Contact form handling
+// Contact form handling
 function initContactForm() {
     const contactForm = document.getElementById('contactForm');
     
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
+        contactForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Get form data
-            const formData = {
+            // 1. Get form data using FormData (Handling simpler for PHP)
+            const formData = new FormData(contactForm);
+            
+            // Validate (Manually getting values for your existing validation function)
+            const validationData = {
                 name: document.getElementById('contactName').value,
                 email: document.getElementById('contactEmail').value,
                 subject: document.getElementById('contactSubject').value,
                 message: document.getElementById('contactMessage').value
             };
             
-            // Validate
-            if (!validateContactForm(formData)) {
+            if (!validateContactForm(validationData)) {
                 return;
             }
             
+            // 2. Add keys to FormData because your HTML IDs might not match PHP expectations
+            // We ensure the keys match exactly what backend/contact.php expects
+            formData.set('name', validationData.name);
+            formData.set('email', validationData.email);
+            formData.set('subject', validationData.subject);
+            formData.set('message', validationData.message);
+
             // Show loading
             const submitBtn = contactForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Simulate API call
-            setTimeout(() => {
+            try {
+                // 3. REAL API CALL
+                const response = await fetch('/Uni_web/HostelBookingpro/backend/contact.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showMessage('success', 'Message sent successfully! We\'ll get back to you within 24 hours.');
+                    contactForm.reset();
+                } else {
+                    showMessage('error', data.message || 'Failed to send message.');
+                }
+
+            } catch (error) {
+                console.error(error);
+                showMessage('error', 'Connection failed. Please try again later.');
+            } finally {
                 // Reset button
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
-                
-                // Show success message
-                showMessage('success', 'Message sent successfully! We\'ll get back to you within 24 hours.');
-                
-                // Reset form
-                contactForm.reset();
-            }, 1500);
+            }
         });
     }
 }
@@ -171,27 +193,29 @@ function initChatWidget() {
 
 function sendChatMessage() {
     const chatInput = document.getElementById('chatInput');
-    const chatMessages = document.getElementById('chatMessages');
     
     const message = chatInput.value.trim();
     if (!message) return;
     
-    // Add user message
+    // 1. Show user message locally
     addChatMessage('user', message);
     chatInput.value = '';
     
-    // Simulate bot response after delay
+    // 2. The Phone Number
+    // IMPORTANT: Use format "2547..." (No spaces, no plus sign, no leading zero)
+    const phoneNumber = "254742574005"; 
+    
+    // 3. Encode the message (handles spaces and special characters)
+    const encodedMessage = encodeURIComponent(message);
+    
+    // 4. THE FIX: Use the full API link
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    // 5. Open
     setTimeout(() => {
-        const responses = [
-            "Thanks for your message! Our support team will get back to you shortly.",
-            "I can help you with booking inquiries, landlord registrations, or general questions.",
-            "For urgent matters, please call our support line at +254 700 123 456.",
-            "You can also email us at support@unistay.com for detailed assistance."
-        ];
-        
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        addChatMessage('bot', randomResponse);
-    }, 1000);
+        addChatMessage('bot', 'Opening WhatsApp...');
+        window.open(whatsappUrl, '_blank');
+    }, 800);
 }
 
 function addChatMessage(sender, text) {
