@@ -82,12 +82,15 @@ try {
             exit;
         }
 
-        // Insert
-        $stmt = $conn->prepare("INSERT INTO users (role, first_name, last_name, email, phone, password, university, otp_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        if (!$stmt) throw new Exception("Database Insert Prepare Failed: " . $conn->error);
         
-        $stmt->bind_param("sssssssi", $role, $first_name, $last_name, $email, $phone, $password, $university, $otp);
+        // Get the ID from POST
+        $national_id = $_POST['national_id'] ?? null;
 
+        // Update SQL to include national_id
+        $stmt = $conn->prepare("INSERT INTO users (role, first_name, last_name, email, phone, password, university, national_id, otp_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        //  Update Bind Params (Added one 's' string type, and the variable)
+        $stmt->bind_param("ssssssssi", $role, $first_name, $last_name, $email, $phone, $password, $university, $national_id, $otp);
         if ($stmt->execute()) {
             // Send Email
             $mail = new PHPMailer(true);

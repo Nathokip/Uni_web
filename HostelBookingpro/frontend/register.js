@@ -293,75 +293,68 @@ async function handleRegistration(event) {
     event.preventDefault();
     console.log('Registration form submitted');
     
-    // Clear previous errors
+    // 1. Clear previous errors
     const generalError = document.getElementById('generalError');
     if (generalError) generalError.style.display = 'none';
 
-    // Determine active type
+    // 2. Determine active type (Student vs Landlord)
     const activeType = document.querySelector('.type-option.active').getAttribute('data-type');
-    
-    if (activeType === 'landlord') {
-        alert('Please use the Landlord button to go to the landlord registration page.');
-        return;
-    }
-    
-    // Helper to get value
-    const getVal = (id) => document.getElementById(id)?.value.trim();
+    const isStudent = (activeType === 'student');
 
-    // Prepare Data
+    // 3. Helper to get value safely
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+    };
+
+    // 4. Prepare Data (Smart Mapping)
+    // We switch IDs based on who is registering
     const formData = new FormData();
     formData.append('role', activeType);
-    formData.append('email', getVal('studentEmail'));
-    formData.append('password', getVal('studentPassword'));
-    formData.append('first_name', getVal('firstName'));
-    formData.append('last_name', getVal('lastName'));
-    formData.append('phone', getVal('phone'));
-    formData.append('university', getVal('university'));
+    
+    if (isStudent) {
+        // --- STUDENT FIELDS ---
+        formData.append('email', getVal('studentEmail'));
+        formData.append('password', getVal('studentPassword'));
+        formData.append('first_name', getVal('firstName'));
+        formData.append('last_name', getVal('lastName'));
+        formData.append('phone', getVal('phone'));
+        formData.append('university', getVal('university'));
+    } else {
+        // --- LANDLORD FIELDS ---
+        formData.append('email', getVal('landlordEmail'));
+        formData.append('password', getVal('landlordPassword'));
+        formData.append('first_name', getVal('landlordFirstName'));
+        formData.append('last_name', getVal('landlordLastName'));
+        formData.append('phone', getVal('landlordPhone'));
+        formData.append('national_id', getVal('idNumber')); // Unique to Landlord
+    }
 
-    // Loading State
+    // 5. Visual Loading State
     const submitBtn = document.querySelector('#registerForm button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
     submitBtn.disabled = true;
     
     try {
-        // --- 1. The Request ---
-        // Use a path relative to this frontend page so requests reach the backend folder
         const response = await fetch('/Uni_web/HostelBookingpro/backend/register.php', {
             method: 'POST',
             body: formData
         });
 
-        // --- 2. The Smart Check (Your new logic) ---
         const contentType = response.headers.get("content-type");
-
-        if (response.ok) {
-            // Success Status (200-299)
-            if (contentType && contentType.includes("application/json")) {
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    showVerificationModal(data.email);
-                } else {
-                    showGeneralError(data.message || 'Registration failed');
-                }
+        
+        if (response.ok && contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data.status === 'success') {
+                showVerificationModal(data.email);
             } else {
-                // PHP returned 200 OK but sent HTML instead of JSON? (Weird server config)
-                const text = await response.text();
-                console.warn('Received non-JSON response:', text);
-                showGeneralError('Server Error: Response was not JSON format.');
+                showGeneralError(data.message || 'Registration failed');
             }
         } else {
-            // Error Status (400, 404, 500)
-            if (contentType && contentType.includes("application/json")) {
-                const errorData = await response.json();
-                showGeneralError(errorData.message || 'Registration failed due to server error.');
-            } else {
-                // It's likely a standard Apache 404 or PHP Fatal Error HTML page
-                const errorText = await response.text();
-                console.error('Server HTML Error:', errorText);
-                showGeneralError(`Server Error (${response.status}): Check console for details.`);
-            }
+            const text = await response.text();
+            console.warn('Server Response:', text);
+            showGeneralError('Server Error: See console for details.');
         }
 
     } catch (err) {
