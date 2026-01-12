@@ -38,40 +38,36 @@ function setupRegistrationType() {
         option.addEventListener('click', function() {
             const type = this.getAttribute('data-type');
             
-            // Skip if this is the landlord button (it has onclick for redirect)
-            if (type === 'landlord' && this.hasAttribute('onclick')) {
-                return; // Let the onclick handle the redirect
-            }
-            
-            // Update active state
+            // Update buttons visual state
             typeOptions.forEach(opt => opt.classList.remove('active'));
             this.classList.add('active');
             
-            // Show corresponding form
+            // Update form visibility AND disabled state
             const forms = document.querySelectorAll('.registration-form');
             forms.forEach(form => {
+                const inputs = form.querySelectorAll('input, select, textarea');
+                
                 if (form.getAttribute('data-type') === type) {
                     form.classList.add('active');
+                    // Enable inputs so they work
+                    inputs.forEach(input => input.disabled = false);
                 } else {
                     form.classList.remove('active');
+                    // Disable inputs so they are ignored by validation
+                    inputs.forEach(input => input.disabled = true);
                 }
             });
             
-            // Update form heading based on type
+            // Update Title Text (Optional, for UX)
             const authTitle = document.querySelector('.auth-title');
-            if (type === 'landlord') {
-                authTitle.textContent = 'Register as Landlord';
-                document.querySelector('.auth-subtitle').textContent = 
-                    'List your hostels and reach thousands of students';
-            } else {
-                authTitle.textContent = 'Create Your Account';
-                document.querySelector('.auth-subtitle').textContent = 
-                    'Join thousands of students finding their perfect accommodation';
+            if (authTitle) {
+                authTitle.textContent = type === 'landlord' 
+                    ? 'Register as Landlord' 
+                    : 'Create Your Account';
             }
         });
     });
 }
-
 /**
  * Setup password visibility toggle
  */
@@ -158,7 +154,8 @@ function checkPasswordStrength(password, fieldId) {
     
     if (strengthFill && strengthSpan) {
         // Update strength bar
-        const percentage = (score / 6) * 100;
+        const maxScore = Object.keys(requirements).length || 1;
+        const percentage = (score / maxScore) * 100;
         strengthFill.style.width = percentage + '%';
         strengthFill.style.backgroundColor = strengthColors[score];
         
@@ -297,40 +294,55 @@ async function handleRegistration(event) {
     const generalError = document.getElementById('generalError');
     if (generalError) generalError.style.display = 'none';
 
-    // 2. Determine active type (Student vs Landlord)
+    // 2. Determine active type
     const activeType = document.querySelector('.type-option.active').getAttribute('data-type');
     const isStudent = (activeType === 'student');
 
-    // 3. Helper to get value safely
+    // 3. Helper to get value
     const getVal = (id) => {
         const el = document.getElementById(id);
         return el ? el.value.trim() : '';
     };
 
-    // 4. Prepare Data (Smart Mapping)
-    // We switch IDs based on who is registering
+    // 4. CONSTRUCT DATA OBJECT FOR VALIDATION
+    // We need to build a simple object to pass to your validateForm() function
+    const dataToValidate = {
+        email: isStudent ? getVal('studentEmail') : getVal('landlordEmail'),
+        password: isStudent ? getVal('studentPassword') : getVal('landlordPassword'),
+        confirmPassword: isStudent ? getVal('confirmStudentPassword') : getVal('confirmLandlordPassword'),
+        firstName: isStudent ? getVal('firstName') : getVal('landlordFirstName'),
+        lastName: isStudent ? getVal('lastName') : getVal('landlordLastName'),
+        phone: isStudent ? getVal('phone') : getVal('landlordPhone'),
+        university: isStudent ? getVal('university') : 'N/A', // Landlords might not need this
+        termsAgreed: (document.getElementById('termsCheckbox') ? document.getElementById('termsCheckbox').checked : (document.querySelector('input[type="checkbox"]') ? document.querySelector('input[type="checkbox"]').checked : false))
+    };
+
+    // 5. RUN VALIDATION (Crucial Step Added)
+    // Clear previous field errors
+    clearAllErrors();
+
+    if (!validateForm(dataToValidate, activeType)) {
+        console.log('Validation failed');
+        return; // Stop execution if validation fails
+    }
+
+    // 6. Prepare FormData for Backend
     const formData = new FormData();
     formData.append('role', activeType);
     
-    if (isStudent) {
-        // --- STUDENT FIELDS ---
-        formData.append('email', getVal('studentEmail'));
-        formData.append('password', getVal('studentPassword'));
-        formData.append('first_name', getVal('firstName'));
-        formData.append('last_name', getVal('lastName'));
-        formData.append('phone', getVal('phone'));
-        formData.append('university', getVal('university'));
-    } else {
-        // --- LANDLORD FIELDS ---
-        formData.append('email', getVal('landlordEmail'));
-        formData.append('password', getVal('landlordPassword'));
-        formData.append('first_name', getVal('landlordFirstName'));
-        formData.append('last_name', getVal('landlordLastName'));
-        formData.append('phone', getVal('landlordPhone'));
-        formData.append('national_id', getVal('idNumber')); // Unique to Landlord
+    // Append fields based on the validated object
+    for (const key in dataToValidate) {
+        // Skip confirmPassword and termsAgreed for the backend payload if not needed
+        if (key !== 'confirmPassword' && key !== 'termsAgreed') {
+            formData.append(key, dataToValidate[key]);
+        }
+    }
+    // Add specific landlord field if needed
+    if (!isStudent) {
+        formData.append('national_id', getVal('idNumber'));
     }
 
-    // 5. Visual Loading State
+    // 7. Visual Loading State
     const submitBtn = document.querySelector('#registerForm button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
@@ -347,6 +359,8 @@ async function handleRegistration(event) {
         if (response.ok && contentType && contentType.includes("application/json")) {
             const data = await response.json();
             if (data.status === 'success') {
+                // Store the role in localStorage so we know where to redirect later
+                localStorage.setItem('userRole', activeType);
                 showVerificationModal(data.email);
             } else {
                 showGeneralError(data.message || 'Registration failed');
@@ -354,89 +368,90 @@ async function handleRegistration(event) {
         } else {
             const text = await response.text();
             console.warn('Server Response:', text);
-            showGeneralError('Server Error: See console for details.');
+            showGeneralError('Server Error. Check console.');
         }
 
     } catch (err) {
         console.error('Network Error:', err);
-        showGeneralError('Connection failed. Is XAMPP running?');
+        showGeneralError('Connection failed. Is server running?');
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
 }
 
-function showGeneralError(message) {
-    let errorDisplay = document.getElementById('generalError');
-    if (!errorDisplay) {
-        // Create if missing
-        errorDisplay = document.createElement('div');
-        errorDisplay.id = 'generalError';
-        errorDisplay.style.cssText = "background-color: #ffebee; color: #c62828; padding: 12px; margin-top: 15px; border-radius: 6px; display: none;";
-        document.querySelector('.auth-card').appendChild(errorDisplay);
-    }
-    errorDisplay.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-    errorDisplay.style.display = 'block';
-}
 /**
- * Validate form data
+ * Validate form data (role-aware)
  */
-function validateForm(data) {
+function validateForm(data, role = 'student') {
     let isValid = true;
-    
+
+    const fieldIdFor = (key) => {
+        switch (key) {
+            case 'email': return role === 'student' ? 'studentEmail' : 'landlordEmail';
+            case 'password': return role === 'student' ? 'studentPassword' : 'landlordPassword';
+            case 'confirmPassword': return role === 'student' ? 'confirmStudentPassword' : 'confirmLandlordPassword';
+            case 'firstName': return role === 'student' ? 'firstName' : 'landlordFirstName';
+            case 'lastName': return role === 'student' ? 'lastName' : 'landlordLastName';
+            case 'phone': return role === 'student' ? 'phone' : 'landlordPhone';
+            case 'university': return 'university';
+            default: return key;
+        }
+    };
+
     // Email validation
     if (!data.email) {
-        showFieldErrorById('studentEmail', 'Email is required');
+        showFieldErrorById(fieldIdFor('email'), 'Email is required');
         isValid = false;
     } else if (!isValidEmail(data.email)) {
-        showFieldErrorById('studentEmail', 'Please enter a valid email address');
+        showFieldErrorById(fieldIdFor('email'), 'Please enter a valid email address');
         isValid = false;
     }
-    
+
     // Password validation
     if (!data.password) {
-        showFieldErrorById('studentPassword', 'Password is required');
+        showFieldErrorById(fieldIdFor('password'), 'Password is required');
         isValid = false;
     } else if (data.password.length < 8) {
-        showFieldErrorById('studentPassword', 'Password must be at least 8 characters');
+        showFieldErrorById(fieldIdFor('password'), 'Password must be at least 8 characters');
         isValid = false;
     }
-    
+
     // Password match validation
     if (data.password !== data.confirmPassword) {
-        showFieldErrorById('confirmStudentPassword', 'Passwords do not match');
+        showFieldErrorById(fieldIdFor('confirmPassword'), 'Passwords do not match');
         isValid = false;
     }
-    
+
     // Name validation
     if (!data.firstName) {
-        showFieldErrorById('firstName', 'First name is required');
+        showFieldErrorById(fieldIdFor('firstName'), 'First name is required');
         isValid = false;
     }
-    
+
     if (!data.lastName) {
-        showFieldErrorById('lastName', 'Last name is required');
+        showFieldErrorById(fieldIdFor('lastName'), 'Last name is required');
         isValid = false;
     }
-    
+
     // Phone validation
     if (!data.phone) {
-        showFieldErrorById('phone', 'Phone number is required');
+        showFieldErrorById(fieldIdFor('phone'), 'Phone number is required');
         isValid = false;
     }
-    
-    // University validation
-    if (!data.university) {
-        showFieldErrorById('university', 'University is required');
+
+    // University validation (only for students)
+    if (role === 'student' && !data.university) {
+        showFieldErrorById(fieldIdFor('university'), 'University is required');
         isValid = false;
     }
-    
+
     // Terms agreement
     if (!data.termsAgreed) {
         showGeneralError('You must agree to the Terms of Service and Privacy Policy');
         isValid = false;
     }
-    
+
     return isValid;
 }
 
@@ -599,30 +614,36 @@ function startResendTimer() {
  * Show success modal
  */
 function showSuccessModal(userType) {
+    // If userType isn't passed, try to get it from storage or DOM
+    if (!userType) {
+        userType = localStorage.getItem('userRole') || 'student';
+    }
+
     const modal = document.getElementById('successModal');
     const successMessage = document.getElementById('successMessage');
     
+    // Determine Dashboard URL based on role
+    const dashboardUrl = userType === 'landlord' 
+        ? 'landlord-dashboard.html' 
+        : 'student-dashboard.html';
+
     if (successMessage) {
         successMessage.textContent = `Redirecting to ${userType} dashboard...`;
     }
     
-    // Show modal
     modal.style.display = 'flex';
     
-    // Setup dashboard button
     const dashboardButton = document.getElementById('goToDashboard');
     if (dashboardButton) {
         dashboardButton.onclick = function() {
-            window.location.href = 'student-dashboard.html';
+            window.location.href = dashboardUrl;
         };
     }
     
-    // Auto-redirect after 3 seconds
     setTimeout(() => {
-        window.location.href = 'student-dashboard.html';
+        window.location.href = dashboardUrl;
     }, 3000);
 }
-
 /**
  * Show general error
  */

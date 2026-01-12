@@ -5,40 +5,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize all components
     initNavbar();
     initSearch();
-    initHostelCards();
-    initImageSliders();
+    loadFeaturedHostels(); // <-- Updated to fetch from DB
     initMobileMenu();
     initScrollEffects();
 });
 
-// Navbar scroll effect
+// 1. Navbar scroll effect
 function initNavbar() {
     const navbar = document.getElementById('navbar');
     let lastScroll = 0;
     
-    window.addEventListener('scroll', function() {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > 100) {
-            navbar.classList.add('scrolled');
+    if (navbar) {
+        window.addEventListener('scroll', function() {
+            const currentScroll = window.pageYOffset;
             
-            if (currentScroll > lastScroll && currentScroll > 400) {
-                // Scrolling down
-                navbar.style.transform = 'translateY(-100%)';
+            if (currentScroll > 100) {
+                navbar.classList.add('scrolled');
+                
+                if (currentScroll > lastScroll && currentScroll > 400) {
+                    navbar.style.transform = 'translateY(-100%)'; // Scrolling down
+                } else {
+                    navbar.style.transform = 'translateY(0)'; // Scrolling up
+                }
             } else {
-                // Scrolling up
+                navbar.classList.remove('scrolled');
                 navbar.style.transform = 'translateY(0)';
             }
-        } else {
-            navbar.classList.remove('scrolled');
-            navbar.style.transform = 'translateY(0)';
-        }
-        
-        lastScroll = currentScroll;
-    });
+            
+            lastScroll = currentScroll;
+        });
+    }
 }
 
-// Search functionality
+// 2. Search functionality
 function initSearch() {
     const searchForm = document.getElementById('searchForm');
     
@@ -46,131 +45,126 @@ function initSearch() {
         searchForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const location = document.getElementById('location').value;
-            const price = document.getElementById('price').value;
-            const roommate = document.getElementById('roommate').value;
-            
-            // In a real app, this would make an API call
-            // For demo, we'll show a loading state
             const searchBtn = searchForm.querySelector('button[type="submit"]');
             const originalText = searchBtn.innerHTML;
             
+            // Visual feedback
             searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
             searchBtn.disabled = true;
             
-            // Simulate search delay
+            // Gather values
+            const location = document.getElementById('location').value;
+            const price = document.getElementById('price').value;
+            const roommate = document.getElementById('roommate').value;
+
+            // Redirect to hostels page with parameters
             setTimeout(() => {
-                searchBtn.innerHTML = originalText;
-                searchBtn.disabled = false;
-                
-                // Show search results
-                alert(`Searching for hostels in ${location || 'any location'} with price range ${price || 'any price'} and roommate preference: ${roommate || 'any'}`);
-                
-                // Redirect to hostels page with search params
                 const params = new URLSearchParams();
                 if (location) params.append('location', location);
                 if (price) params.append('price', price);
                 if (roommate) params.append('roommate', roommate);
                 
                 window.location.href = `hostels.html?${params.toString()}`;
-            }, 1500);
+            }, 800);
         });
     }
 }
 
-// Hostel cards functionality
-function initHostelCards() {
+// 3. Featured Hostels (Connected to Database)
+async function loadFeaturedHostels() {
     const hostelGrid = document.getElementById('featuredHostels');
     
-    if (hostelGrid) {
-        // Sample hostel data
-        const hostels = [
-            {
-                id: 1,
-                name: "Maisha Hostel",
-                location: "Dedan Kimathi University, Boma, opposite Sunrise hostel",
-                currentPrice: "KES 6,000",
-                originalPrice: "KES 12,000",
-                discount: "17% off",
-                savings: "Save KES 6,000",
-                roommate: "Stay Alone",
-                rating: 4.5,
-                reviews: 24,
-                images: [
-                    "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                ]
-            },
-            {
-                id: 2,
-                name: "Paradise Hostels",
-                location: "DeKUT, Gate A",
-                currentPrice: "KES 7,200",
-                originalPrice: "KES 8,500",
-                discount: "15% off",
-                savings: "Save KES 1,300",
-                roommate: "Share with Roommate",
-                rating: 4.0,
-                reviews: 18,
-                images: [
-                    "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                ]
-            },
-            {
-                id: 3,
-                name: "Catholic Hostel",
-                location: "DeKUT, Gate B, Nyeri View",
-                currentPrice: "KES 2,999",
-                originalPrice: "KES 4,000",
-                discount: "25% off",
-                savings: "Save KES 1,001",
-                roommate: "Stay Alone",
-                rating: 3.5,
-                reviews: 12,
-                images: [
-                    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                ]
+    if (!hostelGrid) return;
+
+    // Show loading skeleton/spinner
+    hostelGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary);"></i>
+            <p style="margin-top: 15px; color: #666;">Loading top hostels...</p>
+        </div>
+    `;
+
+    try {
+        // Fetch from backend
+        const response = await fetch('../backend/get_hostels.php');
+        if (!response.ok) throw new Error('Failed to fetch data');
+        
+        const allHostels = await response.json();
+        
+        // Take only the first 3 hostels for the homepage
+        const featuredHostels = allHostels.slice(0, 3);
+
+        if (featuredHostels.length === 0) {
+            hostelGrid.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">No hostels found.</p>';
+            return;
+        }
+
+        // Render Cards
+        hostelGrid.innerHTML = featuredHostels.map(hostel => createHostelCard(hostel)).join('');
+
+        // Initialize Sliders for the new cards
+        initImageSliders();
+
+        // Add Event Delegation for Buttons (Better performance)
+        hostelGrid.addEventListener('click', function(e) {
+            const bookBtn = e.target.closest('.btn-book');
+            const detailsBtn = e.target.closest('.btn-details');
+
+            if (bookBtn) {
+                const id = bookBtn.getAttribute('data-id');
+                bookHostel(id);
             }
-        ];
-        
-        // Render hostel cards
-        hostelGrid.innerHTML = hostels.map(hostel => createHostelCard(hostel)).join('');
-        
-        // Add event listeners to book buttons
-        document.querySelectorAll('.btn-book').forEach(button => {
-            button.addEventListener('click', function() {
-                const hostelId = this.getAttribute('data-id');
-                bookHostel(hostelId);
-            });
+            if (detailsBtn) {
+                const id = detailsBtn.getAttribute('data-id');
+                viewHostelDetails(id);
+            }
         });
-        
-        // Add event listeners to view details buttons
-        document.querySelectorAll('.btn-details').forEach(button => {
-            button.addEventListener('click', function() {
-                const hostelId = this.getAttribute('data-id');
-                viewHostelDetails(hostelId);
-            });
-        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        hostelGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: #e74c3c;">
+                <p>Unable to load hostels. Please try again later.</p>
+            </div>
+        `;
     }
 }
 
-// Create hostel card HTML
+// Helper: Create HTML for a single card
 function createHostelCard(hostel) {
-    const stars = generateStarRating(hostel.rating);
-    const roommateIcon = hostel.roommate.includes('Share') ? 'fa-users' : 'fa-user';
+    // Process Data Types
+    const price = Number(hostel.price) || 0;
+    const originalPrice = Number(hostel.originalPrice) || (price + 2000);
+    const savings = originalPrice - price;
+    const discount = hostel.discount || Math.round((savings / originalPrice) * 100) + '% off';
     
+    const rating = Number(hostel.rating) || 4.5;
+    const stars = generateStarRating(rating);
+    
+    const roommateOption = hostel.roommateOption || 'Share with Roommate';
+    const roommateIcon = roommateOption.toLowerCase().includes('alone') ? 'fa-user' : 'fa-users';
+
+    // Handle Images (Parse JSON if string, or use placeholder)
+    let images = hostel.images;
+    if (typeof images === 'string') {
+        try { images = JSON.parse(images); } catch(e) { images = []; }
+    }
+    if (!Array.isArray(images) || images.length === 0) {
+        images = ['assets/images/placeholder.jpg'];
+    }
+
     return `
-        <div class="hostel-card" data-id="${hostel.id}">
-            <div class="discount-badge">${hostel.discount}</div>
+        <div class="hostel-card fade-in" data-id="${hostel.id}">
+            <div class="discount-badge">${discount}</div>
             <div class="hostel-images">
                 <div class="image-slider" id="slider-${hostel.id}">
-                    ${hostel.images.map(img => `<img src="${img}" alt="${hostel.name}">`).join('')}
+                    ${images.map(img => `<img src="${img}" alt="${hostel.name}" onerror="this.src='assets/images/placeholder.jpg'">`).join('')}
                 </div>
-                <div class="image-nav" id="nav-${hostel.id}">
-                    ${hostel.images.map((_, i) => `<div class="image-dot ${i === 0 ? 'active' : ''}" data-slide="${i}"></div>`).join('')}
-                </div>
+                ${images.length > 1 ? `
+                    <div class="image-nav" id="nav-${hostel.id}">
+                        ${images.map((_, i) => `<div class="image-dot ${i === 0 ? 'active' : ''}" data-slide="${i}"></div>`).join('')}
+                    </div>
+                ` : ''}
             </div>
             
             <div class="hostel-info">
@@ -184,18 +178,18 @@ function createHostelCard(hostel) {
                 </div>
                 
                 <div class="hostel-price">
-                    <span class="current-price">${hostel.currentPrice}</span>
-                    <span class="original-price">${hostel.originalPrice}</span>
-                    <span class="save-badge">${hostel.savings}</span>
+                    <span class="current-price">KES ${price.toLocaleString()}</span>
+                    <span class="original-price">KES ${originalPrice.toLocaleString()}</span>
+                    <span class="save-badge">Save KES ${savings.toLocaleString()}</span>
                 </div>
                 
                 <div class="hostel-meta">
                     <span class="roommate-tag">
-                        <i class="fas ${roommateIcon}"></i> ${hostel.roommate}
+                        <i class="fas ${roommateIcon}"></i> ${roommateOption}
                     </span>
                     <div class="rating">
                         ${stars}
-                        <span>${hostel.rating} (${hostel.reviews})</span>
+                        <span>${rating} (${hostel.reviews || 10})</span>
                     </div>
                 </div>
                 
@@ -212,7 +206,7 @@ function createHostelCard(hostel) {
     `;
 }
 
-// Generate star rating HTML
+// Helper: Star Rating Generator
 function generateStarRating(rating) {
     let stars = '';
     const fullStars = Math.floor(rating);
@@ -221,68 +215,73 @@ function generateStarRating(rating) {
     for (let i = 0; i < fullStars; i++) {
         stars += '<i class="fas fa-star"></i>';
     }
-    
     if (hasHalfStar) {
         stars += '<i class="fas fa-star-half-alt"></i>';
     }
-    
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
     for (let i = 0; i < emptyStars; i++) {
         stars += '<i class="far fa-star"></i>';
     }
-    
     return stars;
 }
 
-// Initialize image sliders
+// 4. Image Slider Logic
 function initImageSliders() {
+    // Only target sliders that haven't been initialized yet to avoid double-binding if called multiple times
     document.querySelectorAll('.hostel-images').forEach(container => {
+        if(container.dataset.initialized) return; 
+        container.dataset.initialized = "true";
+
         const slider = container.querySelector('.image-slider');
         const dots = container.querySelectorAll('.image-dot');
+        
+        if (!slider || !dots.length) return;
+
         let currentSlide = 0;
-        
-        // Auto slide every 5 seconds
-        const slideInterval = setInterval(() => {
-            currentSlide = (currentSlide + 1) % dots.length;
-            updateSlider(slider, dots, currentSlide);
-        }, 5000);
-        
-        // Click on dots
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                currentSlide = index;
-                updateSlider(slider, dots, currentSlide);
-                clearInterval(slideInterval);
-            });
-        });
-        
-        // Pause on hover
-        container.addEventListener('mouseenter', () => {
-            clearInterval(slideInterval);
-        });
-        
-        container.addEventListener('mouseleave', () => {
+        let slideInterval;
+
+        const startSlide = () => {
             slideInterval = setInterval(() => {
                 currentSlide = (currentSlide + 1) % dots.length;
                 updateSlider(slider, dots, currentSlide);
             }, 5000);
+        };
+
+        startSlide();
+        
+        // Dot clicks
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card click
+                currentSlide = index;
+                updateSlider(slider, dots, currentSlide);
+                clearInterval(slideInterval);
+                startSlide();
+            });
         });
+        
+        // Hover effects
+        container.addEventListener('mouseenter', () => clearInterval(slideInterval));
+        container.addEventListener('mouseleave', startSlide);
     });
 }
 
 function updateSlider(slider, dots, slideIndex) {
-    slider.style.transform = `translateX(-${slideIndex * 25}%)`;
-    dots.forEach(dot => dot.classList.remove('active'));
-    dots[slideIndex].classList.add('active');
+    if(!slider) return;
+    slider.style.transform = `translateX(-${slideIndex * 100}%)`;
+    if(dots.length > 0) {
+        dots.forEach(dot => dot.classList.remove('active'));
+        if(dots[slideIndex]) dots[slideIndex].classList.add('active');
+    }
 }
 
-// Mobile menu functionality
+// 5. Mobile Menu
 function initMobileMenu() {
     const menuBtn = document.querySelector('.mobile-menu-btn');
     const navLinks = document.querySelector('.nav-links');
     const authButtons = document.querySelector('.auth-buttons');
     
-    if (menuBtn) {
+    if (menuBtn && navLinks && authButtons) {
         menuBtn.addEventListener('click', function() {
             const isVisible = navLinks.style.display === 'flex';
             
@@ -290,35 +289,35 @@ function initMobileMenu() {
                 navLinks.style.display = 'none';
                 authButtons.style.display = 'none';
             } else {
+                // Apply inline styles for mobile view
                 navLinks.style.display = 'flex';
                 navLinks.style.flexDirection = 'column';
                 navLinks.style.position = 'absolute';
-                navLinks.style.top = '100%';
+                navLinks.style.top = '70px'; // Adjusted top
                 navLinks.style.left = '0';
                 navLinks.style.right = '0';
-                navLinks.style.backgroundColor = 'var(--white)';
+                navLinks.style.backgroundColor = '#fff';
                 navLinks.style.padding = '2rem';
-                navLinks.style.boxShadow = 'var(--shadow-lg)';
-                navLinks.style.gap = '1rem';
+                navLinks.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+                navLinks.style.zIndex = '100';
                 
                 authButtons.style.display = 'flex';
                 authButtons.style.flexDirection = 'column';
                 authButtons.style.position = 'absolute';
-                authButtons.style.top = 'calc(100% + 250px)';
+                authButtons.style.top = '300px'; // Rough estimate, css classes are better
                 authButtons.style.left = '0';
                 authButtons.style.right = '0';
-                authButtons.style.backgroundColor = 'var(--white)';
-                authButtons.style.padding = '2rem';
-                authButtons.style.boxShadow = 'var(--shadow-lg)';
-                authButtons.style.gap = '1rem';
+                authButtons.style.backgroundColor = '#fff';
+                authButtons.style.padding = '0 2rem 2rem 2rem';
+                authButtons.style.zIndex = '100';
+                authButtons.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
             }
         });
     }
 }
 
-// Scroll effects
+// 6. Scroll Animations
 function initScrollEffects() {
-    // Add fade-in animation for elements
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -328,61 +327,44 @@ function initScrollEffects() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target); // Only animate once
             }
         });
     }, observerOptions);
     
-    // Observe elements
-    document.querySelectorAll('.hostel-card, .feature-card, .step-card').forEach(card => {
+    // Elements to animate
+    document.querySelectorAll('.feature-card, .hostel-card').forEach(card => {
         observer.observe(card);
     });
 }
 
-// Book hostel function
+// Navigation Actions
 function bookHostel(hostelId) {
-    // Check if user is logged in
+    // Redirect to login or booking flow
+    // Ideally check login status via API or Token
     const isLoggedIn = localStorage.getItem('unistay_user') !== null;
-    
     if (!isLoggedIn) {
-        // Redirect to login page
         window.location.href = `login.html?redirect=booking&hostel=${hostelId}`;
-        return;
+    } else {
+        // If you have a dedicated booking page:
+        // window.location.href = `booking.html?hostel=${hostelId}`;
+        
+        // If you want to use the modal on hostels.html:
+        window.location.href = `hostels.html?action=book&id=${hostelId}`;
     }
-    
-    // Redirect to booking page
-    window.location.href = `booking.html?hostel=${hostelId}`;
 }
 
-// View hostel details
 function viewHostelDetails(hostelId) {
     window.location.href = `hostel-details.html?id=${hostelId}`;
 }
 
-// Format currency
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-KE', {
-        style: 'currency',
-        currency: 'KES',
-        minimumFractionDigits: 0
-    }).format(amount);
-}
-
-// Add fade-in animation CSS
+// CSS Injection for Animation
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-    
-    .fade-in {
-        animation: fadeIn 0.6s ease-out forwards;
-    }
+    .fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
 `;
 document.head.appendChild(style);

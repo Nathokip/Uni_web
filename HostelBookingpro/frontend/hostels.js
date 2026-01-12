@@ -1,137 +1,152 @@
 // hostels.js - Search Algorithm and Hostel Management
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize
+    fetchHostels();
+    initSearchAlgorithm();
+    initFilters();
+    initPagination();
+    
+    // --- NEW: Global Event Listener (Event Delegation) ---
+    // This fixes the unresponsive button issue
+    const grid = document.getElementById('hostelsGrid');
+    if(grid) {
+        grid.addEventListener('click', function(e) {
+            // Check if the clicked element (or its parent) has the class 'btn-book'
+            const bookBtn = e.target.closest('.btn-book');
+            const detailsBtn = e.target.closest('.btn-details');
+
+            if (bookBtn) {
+                const id = parseInt(bookBtn.getAttribute('data-id'));
+                console.log("Book Button Clicked for ID:", id); // Debugging Log
+                bookHostel(id);
+            }
+            
+            if (detailsBtn) {
+                const id = parseInt(detailsBtn.getAttribute('data-id'));
+                viewHostelDetails(id);
+            }
+        });
+    }
+});
+
+// Global Variables
+let hostelsData = []; // Starts empty, fills from Database
+let currentHostels = [];
+let currentPage = 1;
+const hostelsPerPage = 6;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize
-    initHostelsPage();
+    fetchHostels(); // Fetch data first
     initSearchAlgorithm();
     initFilters();
     initPagination();
 });
 
-// Hostel Data (In real app, this would come from API)
-const hostelsData = [
-    {
-        id: 1,
-        name: "Maisha Hostel",
-        location: "Dedan Kimathi University, Boma, opposite Sunrise hostel",
-        price: 6000,
-        originalPrice: 12000,
-        discount: 50,
-        roommateOption: "alone",
-        rating: 4.5,
-        reviews: 24,
-        images: [
-            "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ],
-        amenities: ["WiFi", "Security", "Laundry", "Study Room"],
-        description: "Modern hostel with great views of the campus. Each room has ensuite bathroom and high-speed WiFi.",
-        landlord: "John Kamau",
-        verified: true,
-        available: true
-    },
-    {
-        id: 2,
-        name: "Paradise Hostels",
-        location: "DeKUT, Gate A",
-        price: 7200,
-        originalPrice: 8500,
-        discount: 15,
-        roommateOption: "share",
-        rating: 4.0,
-        reviews: 18,
-        images: [
-            "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ],
-        amenities: ["WiFi", "Common Kitchen", "Security", "TV Room"],
-        description: "Affordable shared accommodation with common study areas and 24/7 security.",
-        landlord: "Sarah Wambui",
-        verified: true,
-        available: true
-    },
-    {
-        id: 3,
-        name: "Catholic Hostel",
-        location: "DeKUT, Gate B, Nyeri View",
-        price: 2999,
-        originalPrice: 4000,
-        discount: 25,
-        roommateOption: "alone",
-        rating: 3.5,
-        reviews: 12,
-        images: [
-            "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ],
-        amenities: ["WiFi", "Security", "Prayer Room"],
-        description: "Budget-friendly accommodation with quiet environment perfect for studying.",
-        landlord: "Catholic Diocese",
-        verified: true,
-        available: true
-    },
-    // Add more hostels as needed...
-];
+// --- NEW: Fetch Data from Database ---
+async function fetchHostels() {
+    const loadingState = document.getElementById('loadingState');
+    const hostelsGrid = document.getElementById('hostelsGrid');
+    
+    // Show loading spinner
+    if(loadingState) loadingState.style.display = 'block';
+    if(hostelsGrid) hostelsGrid.innerHTML = '';
 
-let currentHostels = [...hostelsData];
-let currentPage = 1;
-const hostelsPerPage = 6;
+    try {
+        // Fetch from PHP backend
+        const response = await fetch('../backend/get_hostels.php');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-function initHostelsPage() {
-    displayHostels(currentHostels);
-    updateResultsCount();
+        const data = await response.json();
+        
+        // Update global data
+        hostelsData = data;
+        currentHostels = [...hostelsData];
+        
+        // Update UI
+        displayHostels(currentHostels);
+        updateResultsCount();
+        
+    } catch (error) {
+        console.error('Error fetching hostels:', error);
+        if(hostelsGrid) {
+            hostelsGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #666;">
+                    <i class="fas fa-exclamation-circle fa-2x" style="margin-bottom: 1rem; color: #e74c3c;"></i>
+                    <p>Failed to load hostels. Please make sure the backend is running.</p>
+                </div>
+            `;
+        }
+    } finally {
+        if(loadingState) loadingState.style.display = 'none';
+    }
 }
 
 // Display hostels in grid
 function displayHostels(hostels) {
     const hostelsGrid = document.getElementById('hostelsGrid');
-    const loadingState = document.getElementById('loadingState');
     const noResults = document.getElementById('noResults');
     
-    // Show loading
-    loadingState.style.display = 'block';
-    hostelsGrid.innerHTML = '';
+    if (!hostelsGrid) return;
+
+    if (hostels.length === 0) {
+        if(noResults) noResults.style.display = 'block';
+        hostelsGrid.style.display = 'none';
+        return;
+    }
     
-    // Simulate loading delay
-    setTimeout(() => {
-        loadingState.style.display = 'none';
-        
-        if (hostels.length === 0) {
-            noResults.style.display = 'block';
-            hostelsGrid.style.display = 'none';
-            return;
-        }
-        
-        noResults.style.display = 'none';
-        hostelsGrid.style.display = 'grid';
-        
-        // Calculate pagination
-        const startIndex = (currentPage - 1) * hostelsPerPage;
-        const endIndex = startIndex + hostelsPerPage;
-        const paginatedHostels = hostels.slice(startIndex, endIndex);
-        
-        // Create hostel cards
-        hostelsGrid.innerHTML = paginatedHostels.map(hostel => createHostelCard(hostel)).join('');
-        
-        // Add event listeners
-        addHostelCardListeners();
-    }, 500);
+    if(noResults) noResults.style.display = 'none';
+    hostelsGrid.style.display = 'grid';
+    
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * hostelsPerPage;
+    const endIndex = startIndex + hostelsPerPage;
+    const paginatedHostels = hostels.slice(startIndex, endIndex);
+    
+    // Create hostel cards
+    hostelsGrid.innerHTML = paginatedHostels.map(hostel => createHostelCard(hostel)).join('');
+    
+    // Add event listeners
+    addHostelCardListeners();
 }
 
 // Create hostel card HTML
 function createHostelCard(hostel) {
-    const savings = hostel.originalPrice - hostel.price;
-    const roommateIcon = hostel.roommateOption === 'alone' ? 'fa-user' : 'fa-users';
-    const stars = generateStarRating(hostel.rating);
+    // Safely handle missing or numeric data
+    const price = Number(hostel.price) || 0;
+    const originalPrice = Number(hostel.originalPrice) || (price + 2000); // Fallback logic
+    const savings = originalPrice - price;
+    const discount = hostel.discount || Math.round((savings / originalPrice) * 100);
+    
+    const roommateOption = hostel.roommateOption || 'share';
+    const roommateIcon = roommateOption === 'alone' ? 'fa-user' : 'fa-users';
+    const rating = Number(hostel.rating) || 4.5;
+    const reviews = hostel.reviews || 0;
+    const stars = generateStarRating(rating);
+    
+    // Ensure images is an array
+    let images = hostel.images;
+    if (typeof images === 'string') {
+        try { images = JSON.parse(images); } catch(e) { images = ['assets/images/placeholder.jpg']; }
+    }
+    if (!Array.isArray(images) || images.length === 0) images = ['assets/images/placeholder.jpg'];
+
+    // Ensure amenities is an array
+    let amenities = hostel.amenities || ["WiFi", "Security"];
     
     return `
         <div class="hostel-card" data-id="${hostel.id}">
-            <div class="discount-badge">${hostel.discount}% off</div>
+            <div class="discount-badge">${discount}% off</div>
             <div class="hostel-images">
                 <div class="image-slider" id="slider-${hostel.id}">
-                    ${hostel.images.map(img => `<img src="${img}" alt="${hostel.name}">`).join('')}
+                    ${images.map(img => `<img src="${img}" alt="${hostel.name}" onerror="this.src='assets/images/placeholder.jpg'">`).join('')}
                 </div>
-                ${hostel.images.length > 1 ? `
+                ${images.length > 1 ? `
                     <div class="image-nav" id="nav-${hostel.id}">
-                        ${hostel.images.map((_, i) => `<div class="image-dot ${i === 0 ? 'active' : ''}" data-slide="${i}"></div>`).join('')}
+                        ${images.map((_, i) => `<div class="image-dot ${i === 0 ? 'active' : ''}" data-slide="${i}"></div>`).join('')}
                     </div>
                 ` : ''}
             </div>
@@ -148,27 +163,27 @@ function createHostelCard(hostel) {
                 </div>
                 
                 <div class="hostel-price">
-                    <span class="current-price">KES ${hostel.price.toLocaleString()}</span>
-                    <span class="original-price">KES ${hostel.originalPrice.toLocaleString()}</span>
+                    <span class="current-price">KES ${price.toLocaleString()}</span>
+                    <span class="original-price">KES ${originalPrice.toLocaleString()}</span>
                     <span class="save-badge">Save KES ${savings.toLocaleString()}</span>
                 </div>
                 
                 <div class="hostel-meta">
                     <span class="roommate-tag">
-                        <i class="fas ${roommateIcon}"></i> ${hostel.roommateOption === 'alone' ? 'Stay Alone' : 'Share Room'}
+                        <i class="fas ${roommateIcon}"></i> ${roommateOption === 'alone' ? 'Stay Alone' : 'Share Room'}
                     </span>
                     <div class="rating">
                         ${stars}
-                        <span>${hostel.rating} (${hostel.reviews})</span>
+                        <span>${rating} (${reviews})</span>
                     </div>
                 </div>
                 
                 <div class="amenities-preview">
-                    ${hostel.amenities.slice(0, 3).map(amenity => 
+                    ${amenities.slice(0, 3).map(amenity => 
                         `<span class="amenity-tag"><i class="fas fa-check"></i> ${amenity}</span>`
                     ).join('')}
-                    ${hostel.amenities.length > 3 ? 
-                        `<span class="amenity-tag">+${hostel.amenities.length - 3} more</span>` : ''
+                    ${amenities.length > 3 ? 
+                        `<span class="amenity-tag">+${amenities.length - 3} more</span>` : ''
                     }
                 </div>
                 
@@ -238,12 +253,16 @@ function initImageSliders() {
         if (!slider || !dots.length) return;
         
         let currentSlide = 0;
+        let slideInterval;
+
+        const startSlide = () => {
+            slideInterval = setInterval(() => {
+                currentSlide = (currentSlide + 1) % dots.length;
+                updateSlider(slider, dots, currentSlide);
+            }, 5000);
+        };
         
-        // Auto slide every 5 seconds
-        let slideInterval = setInterval(() => {
-            currentSlide = (currentSlide + 1) % dots.length;
-            updateSlider(slider, dots, currentSlide);
-        }, 5000);
+        startSlide();
         
         // Click on dots
         dots.forEach((dot, index) => {
@@ -251,29 +270,21 @@ function initImageSliders() {
                 currentSlide = index;
                 updateSlider(slider, dots, currentSlide);
                 clearInterval(slideInterval);
+                startSlide(); // Restart timer after manual click
             });
         });
         
         // Pause on hover
-        container.addEventListener('mouseenter', () => {
-            clearInterval(slideInterval);
-        });
-        
-        container.addEventListener('mouseleave', () => {
-            slideInterval = setInterval(() => {
-                currentSlide = (currentSlide + 1) % dots.length;
-                updateSlider(slider, dots, currentSlide);
-            }, 5000);
-        });
+        container.addEventListener('mouseenter', () => clearInterval(slideInterval));
+        container.addEventListener('mouseleave', startSlide);
     });
 }
 
 function updateSlider(slider, dots, slideIndex) {
     if (!slider || !dots) return;
-    
     slider.style.transform = `translateX(-${slideIndex * 100}%)`;
     dots.forEach(dot => dot.classList.remove('active'));
-    dots[slideIndex].classList.add('active');
+    if(dots[slideIndex]) dots[slideIndex].classList.add('active');
 }
 
 // SEARCH ALGORITHM
@@ -295,8 +306,11 @@ function initSearchAlgorithm() {
     document.querySelectorAll('.location-tag').forEach(tag => {
         tag.addEventListener('click', function() {
             const location = this.getAttribute('data-location');
-            document.getElementById('locationSearch').value = location;
-            performSearch(location);
+            const searchBox = document.getElementById('locationSearch');
+            if(searchBox) {
+                searchBox.value = location;
+                performSearch(location.toLowerCase());
+            }
         });
     });
 }
@@ -306,9 +320,9 @@ function performSearch(searchTerm) {
     const filteredHostels = hostelsData.filter(hostel => {
         // Search in multiple fields
         const searchFields = [
-            hostel.name.toLowerCase(),
-            hostel.location.toLowerCase(),
-            hostel.description.toLowerCase()
+            (hostel.name || '').toLowerCase(),
+            (hostel.location || '').toLowerCase(),
+            (hostel.description || '').toLowerCase()
         ];
         
         // Check if search term appears in any field
@@ -331,7 +345,6 @@ function resetSearch() {
 // FILTERS
 function initFilters() {
     const priceSlider = document.getElementById('priceSlider');
-    const minPriceDisplay = document.getElementById('minPrice');
     const maxPriceDisplay = document.getElementById('maxPrice');
     const applyFiltersBtn = document.getElementById('applyFilters');
     const resetFiltersBtn = document.getElementById('resetFilters');
@@ -339,7 +352,7 @@ function initFilters() {
     
     if (priceSlider) {
         priceSlider.addEventListener('input', function() {
-            maxPriceDisplay.textContent = this.value.toLocaleString();
+            if(maxPriceDisplay) maxPriceDisplay.textContent = parseInt(this.value).toLocaleString();
         });
     }
     
@@ -366,16 +379,20 @@ function initFilters() {
     });
     
     // Clear all filters button
-    document.getElementById('clearAllFilters')?.addEventListener('click', resetAllFilters);
+    const clearBtn = document.getElementById('clearAllFilters');
+    if(clearBtn) clearBtn.addEventListener('click', resetAllFilters);
 }
 
 function applyFilters() {
-    const maxPrice = parseInt(document.getElementById('priceSlider').value);
-    const roommateOption = document.querySelector('input[name="roommate"]:checked').value;
+    const slider = document.getElementById('priceSlider');
+    const maxPrice = slider ? parseInt(slider.value) : 20000;
+    
+    const roommateInput = document.querySelector('input[name="roommate"]:checked');
+    const roommateOption = roommateInput ? roommateInput.value : 'any';
     
     let filteredHostels = hostelsData.filter(hostel => {
         // Price filter
-        if (hostel.price > maxPrice) return false;
+        if (Number(hostel.price) > maxPrice) return false;
         
         // Roommate filter
         if (roommateOption !== 'any' && hostel.roommateOption !== roommateOption) {
@@ -392,7 +409,7 @@ function applyFilters() {
 }
 
 function filterByRating(minRating) {
-    const filteredHostels = hostelsData.filter(hostel => hostel.rating >= minRating);
+    const filteredHostels = hostelsData.filter(hostel => Number(hostel.rating) >= minRating);
     
     currentHostels = filteredHostels;
     currentPage = 1;
@@ -405,20 +422,19 @@ function sortHostels(sortBy) {
     
     switch(sortBy) {
         case 'price-low':
-            sortedHostels.sort((a, b) => a.price - b.price);
+            sortedHostels.sort((a, b) => Number(a.price) - Number(b.price));
             break;
         case 'price-high':
-            sortedHostels.sort((a, b) => b.price - a.price);
+            sortedHostels.sort((a, b) => Number(b.price) - Number(a.price));
             break;
         case 'rating':
-            sortedHostels.sort((a, b) => b.rating - a.rating);
+            sortedHostels.sort((a, b) => Number(b.rating) - Number(a.rating));
             break;
         case 'newest':
-            // Assuming newer hostels have higher IDs
             sortedHostels.sort((a, b) => b.id - a.id);
             break;
         default:
-            // Featured (original order)
+            // Featured (original order - usually by ID in fetch)
             break;
     }
     
@@ -428,20 +444,28 @@ function sortHostels(sortBy) {
 
 function resetAllFilters() {
     // Reset price slider
-    document.getElementById('priceSlider').value = 20000;
-    document.getElementById('maxPrice').textContent = '20,000';
+    const slider = document.getElementById('priceSlider');
+    if(slider) {
+        slider.value = 20000;
+        const maxDisplay = document.getElementById('maxPrice');
+        if(maxDisplay) maxDisplay.textContent = '20,000';
+    }
     
     // Reset roommate selection
-    document.querySelector('input[name="roommate"][value="any"]').checked = true;
+    const anyRoommate = document.querySelector('input[name="roommate"][value="any"]');
+    if(anyRoommate) anyRoommate.checked = true;
     
     // Reset search
-    document.getElementById('locationSearch').value = '';
+    const searchBox = document.getElementById('locationSearch');
+    if(searchBox) searchBox.value = '';
     
-    // Reset rating
-    document.querySelector('.rating-text').textContent = '4+ stars';
+    // Reset rating text
+    const ratingText = document.querySelector('.rating-text');
+    if(ratingText) ratingText.textContent = '4+ stars';
     
     // Reset sort
-    document.getElementById('sortBy').value = 'featured';
+    const sortBox = document.getElementById('sortBy');
+    if(sortBox) sortBox.value = 'featured';
     
     // Reset display
     currentHostels = [...hostelsData];
@@ -480,7 +504,8 @@ function initPagination() {
     pageNumbers.forEach(number => {
         number.addEventListener('click', function() {
             if (!this.classList.contains('active')) {
-                goToPage(parseInt(this.textContent));
+                const val = parseInt(this.textContent);
+                if(!isNaN(val)) goToPage(val);
             }
         });
     });
@@ -511,9 +536,9 @@ function goToPage(page) {
 
 function updatePaginationUI() {
     const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
     const pageNumbers = document.querySelectorAll('.page-number');
-    const totalPages = Math.ceil(currentHostels.length / hostelsPerPage);
+    const totalPages = Math.max(1, Math.ceil(currentHostels.length / hostelsPerPage));
     
     // Update previous button
     if (prevBtn) {
@@ -522,10 +547,10 @@ function updatePaginationUI() {
     
     // Update next button
     if (nextBtn) {
-        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.disabled = currentPage >= totalPages;
     }
     
-    // Update page numbers
+    // Update page numbers (Simple Logic)
     pageNumbers.forEach(number => {
         number.classList.remove('active');
         if (parseInt(number.textContent) === currentPage) {
@@ -537,16 +562,11 @@ function updatePaginationUI() {
 // BOOKING & DETAILS
 function bookHostel(hostelId) {
     // Check if user is logged in
-    const isLoggedIn = localStorage.getItem('unistay_user') !== null;
-    
-    if (!isLoggedIn) {
-        // Redirect to login
-        window.location.href = `login.html?redirect=booking&hostel=${hostelId}`;
-        return;
-    }
+    // In a real app, check session or token. Here we check if the flag is in localStorage
+    // OR we just let the PHP backend reject the request if not logged in.
     
     // Show booking modal or redirect to booking page
-    const hostel = hostelsData.find(h => h.id === hostelId);
+    const hostel = hostelsData.find(h => Number(h.id) === hostelId);
     if (hostel) {
         showBookingModal(hostel);
     }
@@ -559,9 +579,8 @@ function viewHostelDetails(hostelId) {
 
 function showBookingModal(hostel) {
     const modal = document.getElementById('quickBookingModal');
-    // NOTE: Your HTML has id="bookingForm" for the container, but your JS was targeting it.
-    // We update this to be safe.
-    const bookingFormContainer = document.getElementById('bookingForm');
+    // FIX: Target the container correctly
+    const bookingFormContainer = document.getElementById('bookingForm'); 
     
     if (!modal || !bookingFormContainer) return;
     
@@ -575,11 +594,11 @@ function showBookingModal(hostel) {
             <div class="price-breakdown" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 <div class="price-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                     <span>Monthly Rent:</span>
-                    <span>KES ${hostel.price.toLocaleString()}</span>
+                    <span>KES ${parseInt(hostel.price).toLocaleString()}</span>
                 </div>
                 <div class="price-item total" style="display: flex; justify-content: space-between; font-weight: bold; color: #1e293b; border-top: 1px solid #e2e8f0; padding-top: 5px; margin-top: 5px;">
                     <span>Total First Payment:</span>
-                    <span id="displayTotal">KES ${hostel.price.toLocaleString()}</span>
+                    <span id="displayTotal">KES ${parseInt(hostel.price).toLocaleString()}</span>
                 </div>
             </div>
         </div>
@@ -616,10 +635,11 @@ function showBookingModal(hostel) {
     // 2. Dynamic Price Calculation
     const durationSelect = document.getElementById('duration');
     const totalDisplay = document.getElementById('displayTotal');
+    const basePrice = parseInt(hostel.price);
     
     durationSelect.addEventListener('change', function() {
         const months = parseInt(this.value);
-        const total = months * hostel.price;
+        const total = months * basePrice;
         totalDisplay.textContent = `KES ${total.toLocaleString()}`;
     });
 
@@ -628,13 +648,10 @@ function showBookingModal(hostel) {
     
     // Close Logic
     const closeBtn = modal.querySelector('.close-modal');
-    // Ensure close button exists before adding listener to prevent errors
-    if (closeBtn) {
-        closeBtn.onclick = () => modal.style.display = 'none';
-    }
+    if (closeBtn) closeBtn.onclick = () => modal.style.display = 'none';
     window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     
-    // 3. Handle Form Submission (THIS IS THE PART YOU WERE MISSING)
+    // 3. Handle Form Submission
     const form = document.getElementById('quickBookingForm');
     
     form.addEventListener('submit', async function(e) {
@@ -644,27 +661,26 @@ function showBookingModal(hostel) {
         const msgBox = document.getElementById('bookingMsg');
         const formData = new FormData(this);
 
-        // Visual Feedback
+        // UI Feedback
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         btn.disabled = true;
         msgBox.style.display = 'none';
 
         try {
-            // IMPORTANT: Verify this path matches your folder structure exactly!
-            const response = await fetch('/Uni_web/HostelBookingpro/backend/hostel.php', {
+            const response = await fetch('../backend/hostel.php', { 
                 method: 'POST',
                 body: formData
             });
             
-            // Check if PHP returned HTML error instead of JSON (Common issue)
             const text = await response.text();
             let data;
+            
             try {
                 data = JSON.parse(text);
             } catch (err) {
-                console.error("Server returned invalid JSON:", text);
-                throw new Error("Server Error. Check console for details.");
+                console.error("PHP Error:", text); 
+                throw new Error("Server returned invalid data.");
             }
 
             if (data.status === 'success') {
@@ -675,8 +691,7 @@ function showBookingModal(hostel) {
                 
                 setTimeout(() => {
                     modal.style.display = 'none';
-                    // Optional: Redirect to a payment or dashboard page
-                    // window.location.href = 'student-dashboard.html'; 
+                    // Optional: Redirect to dashboard
                 }, 2000);
             } else {
                 msgBox.textContent = data.message;

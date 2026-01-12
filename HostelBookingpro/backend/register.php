@@ -125,12 +125,16 @@ try {
     }
 
 } catch (Exception $e) {
-    // If output buffer is dirty, clean it so we only send JSON
     if (ob_get_length()) ob_clean();
-    
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    
+    // DEBUG: This will tell us the exact file and line number
+    echo json_encode([
+        'status' => 'error', 
+        'message' => $e->getMessage() . ' | File: ' . basename($e->getFile()) . ' | Line: ' . $e->getLine()
+    ]);
 }
+
 
 // Flush the buffer to send the JSON
 ob_end_flush();

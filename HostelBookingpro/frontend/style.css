@@ -3635,3 +3635,14 @@ body {
         padding: 1.5rem;
     }
 }
+/* style.css */
+.modal {
+    display: none; /* Must be hidden by default */
+    position: fixed;
+    z-index: 9999; /* Make sure this is very high! */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
