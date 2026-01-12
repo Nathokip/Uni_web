@@ -30,85 +30,91 @@ Move the project folder into your server directory (e.g., `C:\xampp\htdocs\`).
 **Important:** Ensure your folder is named `Uni_web` or update the fetch paths in the JavaScript files to match your folder name.
 
 ### 3. Database Configuration
-1.  Open **phpMyAdmin** (`http://localhost/phpmyadmin`).
-2.  Create a new database named **`unistay_db`**.
-3.  Click on the **SQL** tab and paste the code below to create all required tables.
-4.  Update `backend/db.php` if your MySQL password is not empty.
 
 #### 📝 SQL Setup Script
 Copy and run this SQL block to set up the entire database:
 
 ```sql
--- 1. Users Table (Stores Students, Landlords, and Admins)
+--- 1. Create and Select Database
+CREATE DATABASE IF NOT EXISTS unistay_db;
+USE unistay_db;
+
+-- 2. Create Users Table (Stores both Students and Landlords)
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20),
+    role ENUM('student', 'landlord') NOT NULL DEFAULT 'student',
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role ENUM('student', 'landlord', 'admin') DEFAULT 'student',
-    otp_code VARCHAR(10),
+    university VARCHAR(255) NULL,   -- Nullable: Only for students
+    national_id VARCHAR(50) NULL,   -- Nullable: Only for landlords
+    otp_code INT NULL,              -- Stores the 5-digit verification code
+    is_verified TINYINT(1) DEFAULT 0, -- 0 = Unverified, 1 = Verified
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Landlord Requests (Pending verification applications)
+-- 3. Create Landlord Requests Table (For hostel listing applications)
 CREATE TABLE landlord_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(100),
-    id_number VARCHAR(50),
-    phone VARCHAR(20),
-    email VARCHAR(100),
-    hostel_name VARCHAR(100),
-    location VARCHAR(255),
-    price DECIMAL(10,2),
-    id_images JSON,
-    ownership_docs JSON,
-    hostel_images JSON,
+    
+    -- Landlord Personal Details
+    full_name VARCHAR(255) NOT NULL,
+    id_number VARCHAR(50) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    
+    -- Hostel Details
+    hostel_name VARCHAR(255) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    
+    -- File Paths (Stored as JSON strings)
+    id_images JSON DEFAULT NULL,
+    ownership_docs JSON DEFAULT NULL,
+    hostel_images JSON DEFAULT NULL,
+    
+    -- Admin Action
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Hostels (Approved hostels linked to Landlords)
-CREATE TABLE hostels (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    landlord_id INT NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    location VARCHAR(255),
-    price DECIMAL(10, 2),
-    description TEXT,
-    images JSON, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (landlord_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- 4. Bookings (Student reservations)
+-- 4. Create Bookings Table (Links Students to Hostels)
 CREATE TABLE bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    
+    -- Foreign Key linking to the Student
     user_id INT NOT NULL,
+    
+    -- Hostel Info (Captured at time of booking)
     hostel_id INT NOT NULL,
-    hostel_name VARCHAR(100) NOT NULL, -- Stored for history incase hostel name changes
+    hostel_name VARCHAR(255) NOT NULL,
+    
+    -- Financials
     price DECIMAL(10, 2) NOT NULL,
+    
+    -- Booking Details
     move_in_date DATE NOT NULL,
-    duration INT NOT NULL COMMENT 'Duration in months',
+    duration INT NOT NULL, -- Number of months
     total_amount DECIMAL(10, 2) NOT NULL,
-    status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
-    booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    
+    -- Booking Status
+    status ENUM('pending', 'confirmed', 'rejected', 'cancelled') DEFAULT 'pending',
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Relationship Constraint
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 5. Contact Messages (Inquiries from Contact Us page)
+-- 5. Create Contact Messages Table (For the contact form)
 CREATE TABLE contact_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    subject VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    status ENUM('new', 'read', 'replied') DEFAULT 'new',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- OPTIONAL: Create a Default Admin User
--- Password is: admin123 (Hashed below)
-INSERT INTO users (first_name, last_name, email, password, role) 
-VALUES ('System', 'Admin', 'admin@unistay.com', '$2y$10$YourHashedPasswordHere', 'admin');
